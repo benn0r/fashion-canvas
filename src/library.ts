@@ -12,6 +12,10 @@ export function mergeDescriptions(first: string, second: string): string {
   return [...new Set(descriptions)].join(" · ");
 }
 
+export function filterImportedPieces<T extends { id: string }>(pieces: T[], imports: Record<string, boolean>): T[] {
+  return pieces.filter((piece) => imports[piece.id] !== false);
+}
+
 export type MergeDataSource = "target" | "source" | "combine";
 
 export function mergePieces(state: LibraryState, targetId: string, sourceId: string, dataSource: MergeDataSource = "combine"): LibraryState {
@@ -52,7 +56,7 @@ export function removeOutfit(state: LibraryState, outfitId: string): LibraryStat
 export function initialLibrary(): LibraryState {
   return {
     outfits: [], pieces: [],
-    settings: { outfitGridColumns: 2, pieceGridColumns: 2 },
+    settings: { outfitGridColumns: 2, pieceGridColumns: 2, theme: "system" },
     outfitCategories: [
       { id: UNCATEGORIZED_OUTFIT, name: "Uncategorized", kind: "outfit" },
       { id: "outfit-casual", name: "Casual", kind: "outfit" },

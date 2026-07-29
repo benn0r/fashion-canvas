@@ -1,4 +1,4 @@
-name: Build, test and publish
+name: Build and test
 on:
   push:
     branches: [main]
@@ -35,34 +35,3 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
-
-  publish-image:
-    if: gitea.event_name == 'push'
-    needs: [build, test, test-e2e]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Log in to Gitea Container Registry
-        shell: sh
-        env:
-          GITEA_SERVER_URL: ${{ gitea.server_url }}
-          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
-          REGISTRY_USERNAME: ${{ gitea.repository_owner }}
-        run: |
-          registry="${GITEA_SERVER_URL#*://}"
-          printf '%s' "${REGISTRY_TOKEN}" | docker login "${registry}" --username "${REGISTRY_USERNAME}" --password-stdin
-      - name: Build and push web preview image
-        shell: sh
-        env:
-          GITEA_SERVER_URL: ${{ gitea.server_url }}
-          REGISTRY_OWNER: ${{ gitea.repository_owner }}
-          SOURCE_COMMIT: ${{ gitea.sha }}
-        run: |
-          registry="${GITEA_SERVER_URL#*://}"
-          image="${registry}/${REGISTRY_OWNER}/fashion-canvas"
-          docker build --tag "${image}:${SOURCE_COMMIT}" --tag "${image}:latest" .
-          docker push "${image}:${SOURCE_COMMIT}"
-          docker push "${image}:latest"

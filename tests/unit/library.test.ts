@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { addCategory, deleteCategory, initialLibrary, mergePieces, pieceOutfitIds, removeOutfit, renameCategory, UNCATEGORIZED_OUTFIT, UNCATEGORIZED_PIECE } from "../../src/library";
+import { addCategory, deleteCategory, filterImportedPieces, initialLibrary, mergePieces, pieceOutfitIds, removeOutfit, renameCategory, UNCATEGORIZED_OUTFIT, UNCATEGORIZED_PIECE } from "../../src/library";
 
 test("adds and renames outfit categories", () => {
   const added = addCategory(initialLibrary(), "outfit", "Travel");
@@ -29,7 +29,12 @@ test("protects Uncategorized categories", () => {
 });
 
 test("defaults outfit and piece grids to two columns", () => {
-  assert.deepEqual(initialLibrary().settings, { outfitGridColumns: 2, pieceGridColumns: 2 });
+  assert.deepEqual(initialLibrary().settings, { outfitGridColumns: 2, pieceGridColumns: 2, theme: "system" });
+});
+
+test("filters pieces explicitly excluded from result import", () => {
+  const pieces = [{ id: "keep" }, { id: "skip" }, { id: "default" }];
+  assert.deepEqual(filterImportedPieces(pieces, { keep: true, skip: false }).map((piece) => piece.id), ["keep", "default"]);
 });
 
 test("merges same-category pieces, outfit links, and AI descriptions", () => {

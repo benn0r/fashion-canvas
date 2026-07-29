@@ -13,6 +13,12 @@ test("navigates among camera, outfits, and pieces pages", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Uncategorized/ })).toHaveCount(0);
   await page.getByRole("tab", { name: "Settings" }).click();
   await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "System appearance, selected" })).toBeVisible();
+  await page.getByRole("radio", { name: "Dark appearance" }).click();
+  await expect(page.getByRole("radio", { name: "Dark appearance, selected" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Settings" })).toHaveCSS("color", "rgb(245, 241, 232)");
+  await page.getByRole("radio", { name: "Light appearance" }).click();
+  await expect(page.getByRole("radio", { name: "Light appearance, selected" })).toBeVisible();
   await page.getByRole("button", { name: "Use 3 columns for outfits" }).click();
   await expect(page.getByRole("button", { name: "Use 3 columns for outfits, selected" })).toBeVisible();
   await page.getByRole("button", { name: "Edit Casual" }).click();
