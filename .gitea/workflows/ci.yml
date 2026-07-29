@@ -47,7 +47,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
 
-  android-apk:
+  build-android-apk:
     needs: [test, test-e2e]
     if: ${{ gitea.event_name == 'push' && gitea.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
