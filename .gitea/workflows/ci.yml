@@ -81,7 +81,12 @@ jobs:
           chmod 600 android/app/release.keystore
       - name: Build signed release APK locally
         working-directory: android
-        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+        run: >-
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace
+          --max-workers=1
+          -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m"
+          -Dorg.gradle.parallel=false
+          -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
       - name: Verify APK signature
         run: >-
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose
