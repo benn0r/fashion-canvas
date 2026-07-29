@@ -55,6 +55,7 @@ jobs:
       image: reactnativecommunity/react-native-android:v20.1
     env:
       CI: 'true'
+      NODE_ENV: production
       EXPO_PUBLIC_FASHION_CANVAS_API_URL: ${{ vars.EXPO_PUBLIC_FASHION_CANVAS_API_URL }}
       ANDROID_VERSION_CODE: ${{ gitea.run_number }}
       ANDROID_KEYSTORE_FILE: release.keystore
@@ -86,6 +87,7 @@ jobs:
           --max-workers=1
           -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m"
           -Dorg.gradle.parallel=false
+          -PnewArchEnabled=false
           -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
       - name: Verify APK signature
         run: >-
