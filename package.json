@@ -19,7 +19,7 @@
     "ios:submit": "eas submit --platform ios --latest",
     "web": "expo start --web",
     "build": "expo export --platform web --output-dir dist",
-    "test": "node --import tsx --test tests/unit/*.test.ts",
+    "test": "node --experimental-test-coverage --test-coverage-lines=98 --test-coverage-branches=97 --test-coverage-functions=100 --import tsx --test tests/unit/*.test.ts",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit"
   },

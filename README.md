@@ -38,6 +38,8 @@ npm test
 npm run test:e2e
 ```
 
+`npm test` includes enforced coverage thresholds for the testable business-logic modules (98% lines, 97% branches, and 100% functions). `npm run test:e2e` runs the complete Playwright browser-flow suite with mocked success, rate-limit, malformed-response, and unavailable-server scenarios. Native permissions, icons, and device filesystem integration still require an iOS/Android simulator or physical-device smoke test.
+
 ## Android builds
 
 Install EAS CLI and authenticate once:
@@ -109,7 +111,7 @@ The local release commands require Android Studio/Android SDK or Xcode respectiv
 
 ## Persistence note
 
-Generated images are currently stored as returned data URLs in AsyncStorage. This is suitable for a prototype library. Before a large production library, move image data to the device filesystem or object storage and retain only durable URIs and metadata in AsyncStorage.
+Metadata and relationships are stored in AsyncStorage. Images are stored separately in Expo FileSystem on Android/iOS and IndexedDB on web; only stable image references are kept with the library metadata.
 
 ## CI
 

@@ -25,7 +25,7 @@ type SelectedPhoto = { uri: string; width: number; height: number; fileName?: st
 const pieceCategoryMap: Record<string, string> = { top: "piece-tops", bottom: "piece-bottoms", dress: "piece-dresses", outerwear: "piece-outerwear", footwear: "piece-footwear", bag: "piece-bags", accessory: "piece-accessories" };
 
 function CategoryChips({ categories, selected, onSelect }: { categories: Category[]; selected: string; onSelect: (id: string) => void }) {
-  return <View style={styles.chips}>{categories.map((category) => <Pressable accessibilityRole="button" key={category.id} onPress={() => onSelect(category.id)} style={[styles.chip, selected === category.id && styles.chipActive]}><Text style={[styles.chipText, selected === category.id && styles.chipTextActive]}>{category.name}</Text></Pressable>)}</View>;
+  return <View accessibilityRole="radiogroup" style={styles.chips}>{categories.map((category) => { const active = selected === category.id; return <Pressable accessibilityRole="radio" accessibilityState={{ checked: active }} accessibilityLabel={`Use ${category.name} category${active ? ", selected" : ""}`} key={category.id} onPress={() => onSelect(category.id)} style={[styles.chip, active && styles.chipActive]}><Text style={[styles.chipText, active && styles.chipTextActive]}>{category.name}</Text></Pressable>; })}</View>;
 }
 
 function Header({ title }: { title: string }) {
@@ -53,30 +53,30 @@ async function migrateLibraryImages(library: LibraryState): Promise<LibraryState
 
 type CropEdge = "left" | "right" | "top" | "bottom";
 
-function CropHandle({ edge, crop, imageWidth, imageHeight, onChange }: { edge: CropEdge; crop: CropRect; imageWidth: number; imageHeight: number; onChange: (crop: CropRect) => void }) {
+function CropHandle({ edge, crop, imageWidth, imageHeight, disabled, onChange }: { edge: CropEdge; crop: CropRect; imageWidth: number; imageHeight: number; disabled: boolean; onChange: (crop: CropRect) => void }) {
   const responder = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
+    onStartShouldSetPanResponder: () => !disabled,
+    onMoveShouldSetPanResponder: () => !disabled,
     onPanResponderGrant: () => { responder.crop = crop; },
     onPanResponderMove: (_, gesture) => {
       const start = responder.crop ?? crop;
       const delta = edge === "left" || edge === "right" ? gesture.dx / imageWidth : gesture.dy / imageHeight;
       onChange(resizeCrop(start, edge, delta));
     },
-  }) as ReturnType<typeof PanResponder.create> & { crop?: CropRect }, [crop, edge, imageHeight, imageWidth, onChange]);
+  }) as ReturnType<typeof PanResponder.create> & { crop?: CropRect }, [crop, disabled, edge, imageHeight, imageWidth, onChange]);
   const vertical = edge === "left" || edge === "right";
   const placement = vertical
     ? { left: (edge === "left" ? crop.left : crop.right) * imageWidth - 22, top: crop.top * imageHeight, width: 44, height: (crop.bottom - crop.top) * imageHeight }
     : { left: crop.left * imageWidth, top: (edge === "top" ? crop.top : crop.bottom) * imageHeight - 22, width: (crop.right - crop.left) * imageWidth, height: 44 };
-  return <View accessibilityRole="adjustable" accessibilityLabel={`Drag ${edge} crop edge`} {...responder.panHandlers} style={[styles.cropHandle, placement]}><View style={vertical ? styles.cropGripVertical : styles.cropGripHorizontal} /></View>;
+  return <View accessibilityRole="adjustable" accessibilityLabel={`Drag ${edge} crop edge`} accessibilityState={{ disabled }} pointerEvents={disabled ? "none" : "auto"} {...responder.panHandlers} style={[styles.cropHandle, placement, disabled && { opacity: .45 }]}><View style={vertical ? styles.cropGripVertical : styles.cropGripHorizontal} /></View>;
 }
 
-function CropEditor({ photo, crop, onChange }: { photo: SelectedPhoto; crop: CropRect; onChange: (crop: CropRect) => void }) {
+function CropEditor({ photo, crop, disabled, onChange }: { photo: SelectedPhoto; crop: CropRect; disabled: boolean; onChange: (crop: CropRect) => void }) {
   const [stage, setStage] = useState({ width: 0, height: 0 });
   const scale = stage.width && stage.height ? Math.min(stage.width / photo.width, stage.height / photo.height) : 0;
   const imageWidth = Math.max(1, photo.width * scale);
   const imageHeight = Math.max(1, photo.height * scale);
-  return <View accessibilityLabel="Crop photo" style={styles.cropStage} onLayout={(event) => setStage(event.nativeEvent.layout)}>{!!scale && <View style={[styles.cropImageFrame, { width: imageWidth, height: imageHeight }]}><Image source={{ uri: photo.uri }} resizeMode="stretch" style={styles.cropImage} /><View pointerEvents="none" style={[styles.cropShade, { left: 0, right: 0, top: 0, height: crop.top * imageHeight }]} /><View pointerEvents="none" style={[styles.cropShade, { left: 0, right: 0, top: crop.bottom * imageHeight, bottom: 0 }]} /><View pointerEvents="none" style={[styles.cropShade, { left: 0, width: crop.left * imageWidth, top: crop.top * imageHeight, height: (crop.bottom - crop.top) * imageHeight }]} /><View pointerEvents="none" style={[styles.cropShade, { left: crop.right * imageWidth, right: 0, top: crop.top * imageHeight, height: (crop.bottom - crop.top) * imageHeight }]} /><View pointerEvents="none" style={[styles.cropOutline, { left: crop.left * imageWidth, top: crop.top * imageHeight, width: (crop.right - crop.left) * imageWidth, height: (crop.bottom - crop.top) * imageHeight }]} /><CropHandle edge="left" crop={crop} imageWidth={imageWidth} imageHeight={imageHeight} onChange={onChange} /><CropHandle edge="right" crop={crop} imageWidth={imageWidth} imageHeight={imageHeight} onChange={onChange} /><CropHandle edge="top" crop={crop} imageWidth={imageWidth} imageHeight={imageHeight} onChange={onChange} /><CropHandle edge="bottom" crop={crop} imageWidth={imageWidth} imageHeight={imageHeight} onChange={onChange} /></View>}</View>;
+  return <View accessibilityLabel="Crop photo" accessibilityState={{ disabled }} style={styles.cropStage} onLayout={(event) => setStage(event.nativeEvent.layout)}>{!!scale && <View style={[styles.cropImageFrame, { width: imageWidth, height: imageHeight }]}><Image source={{ uri: photo.uri }} resizeMode="stretch" style={styles.cropImage} /><View pointerEvents="none" style={[styles.cropShade, { left: 0, right: 0, top: 0, height: crop.top * imageHeight }]} /><View pointerEvents="none" style={[styles.cropShade, { left: 0, right: 0, top: crop.bottom * imageHeight, bottom: 0 }]} /><View pointerEvents="none" style={[styles.cropShade, { left: 0, width: crop.left * imageWidth, top: crop.top * imageHeight, height: (crop.bottom - crop.top) * imageHeight }]} /><View pointerEvents="none" style={[styles.cropShade, { left: crop.right * imageWidth, right: 0, top: crop.top * imageHeight, height: (crop.bottom - crop.top) * imageHeight }]} /><View pointerEvents="none" style={[styles.cropOutline, { left: crop.left * imageWidth, top: crop.top * imageHeight, width: (crop.right - crop.left) * imageWidth, height: (crop.bottom - crop.top) * imageHeight }]} /><CropHandle edge="left" crop={crop} imageWidth={imageWidth} imageHeight={imageHeight} disabled={disabled} onChange={onChange} /><CropHandle edge="right" crop={crop} imageWidth={imageWidth} imageHeight={imageHeight} disabled={disabled} onChange={onChange} /><CropHandle edge="top" crop={crop} imageWidth={imageWidth} imageHeight={imageHeight} disabled={disabled} onChange={onChange} /><CropHandle edge="bottom" crop={crop} imageWidth={imageWidth} imageHeight={imageHeight} disabled={disabled} onChange={onChange} /></View>}</View>;
 }
 
 function PhotoPage({ library, setLibrary, onSaved }: { library: LibraryState; setLibrary: (next: LibraryState) => void; onSaved: () => void }) {
@@ -106,7 +106,7 @@ function PhotoPage({ library, setLibrary, onSaved }: { library: LibraryState; se
   }
 
   async function upload() {
-    if (!photo) return;
+    if (!photo || busy) return;
     setBusy(true); setError("");
     try {
       const cropped = await ImageManipulator.manipulateAsync(photo.uri, [{ crop: cropPixels(crop, photo.width, photo.height) }], { compress: .85, format: ImageManipulator.SaveFormat.JPEG });
@@ -124,7 +124,7 @@ function PhotoPage({ library, setLibrary, onSaved }: { library: LibraryState; se
   }
 
   async function saveResult() {
-    if (!result) return;
+    if (!result || busy) return;
     setBusy(true); setError("");
     const outfitId = `outfit-${Date.now()}`;
     const description = result.pieces.map((piece) => `${piece.label}: ${piece.description}`).join(" · ");
@@ -154,9 +154,23 @@ function PhotoPage({ library, setLibrary, onSaved }: { library: LibraryState; se
 
   if (!photo && !result) return <View style={styles.cameraLanding}><View style={styles.cameraEmptyStage}><Image source={require("./assets/fashion-canvas-mark.png")} style={styles.cameraLandingLogo} /><Text accessibilityRole="header" style={styles.cameraLandingTitle}>Add a mirror selfie</Text><Text style={styles.cameraLandingCopy}>Keep your entire outfit visible from shoulders to shoes.</Text></View><View style={styles.cameraControls}><View style={styles.cropInstructionRow}><Ionicons name="crop-outline" size={18} color={colors.muted} /><Text style={styles.cropInstruction}>You can crop out the background before uploading.</Text></View>{!!error && <Text accessibilityRole="alert" style={styles.cameraError}>{error}</Text>}<View style={styles.cameraActionRow}><Pressable accessibilityRole="button" style={styles.cameraSecondaryAction} onPress={() => selectPhoto(false)}><Ionicons name="images-outline" size={21} color={colors.ink} /><Text style={styles.cameraSecondaryText}>Choose photo</Text></Pressable><Pressable accessibilityRole="button" style={styles.cameraPrimaryAction} onPress={() => selectPhoto(true)}><Ionicons name="camera" size={20} color="#fff" /><Text style={styles.primaryButtonText}>Take photo</Text></Pressable></View></View></View>;
 
-  if (photo && !result) return <View style={styles.cameraWorkspace}><CropEditor photo={photo} crop={crop} onChange={setCrop} /><View style={styles.cameraControls}><View style={[styles.cropInstructionRow, { paddingHorizontal: 8, justifyContent: "flex-start" }]}><Ionicons name="crop-outline" size={18} color={colors.muted} /><Text style={[styles.cropInstruction, { flex: 1 }]}>Drag the sides to keep only the outfit. Crop out as much background as possible; only this area is uploaded.</Text></View>{!!error && <Text accessibilityRole="alert" style={styles.cameraError}>{error}</Text>}<View style={styles.cameraActionRow}><Pressable accessibilityRole="button" accessibilityLabel="Choose another photo" disabled={busy} style={[styles.cameraSecondaryAction, { flex: 0, paddingHorizontal: 14 }]} onPress={() => setPhoto(null)}><Ionicons name="close" size={20} color={colors.ink} /><Text style={styles.cameraSecondaryText}>Retake</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Upload cropped photo" disabled={busy} style={[styles.cameraPrimaryAction, { paddingHorizontal: 20 }]} onPress={upload}>{busy ? <ActivityIndicator color="#fff" /> : <><Ionicons name="sparkles" size={19} color="#fff" /><Text style={styles.primaryButtonText}>Create outfit</Text></>}</Pressable></View></View></View>;
+  if (photo && !result) return <View style={styles.cameraWorkspace}><CropEditor photo={photo} crop={crop} disabled={busy} onChange={setCrop} /><View style={styles.cameraControls}><View style={[styles.cropInstructionRow, { paddingHorizontal: 8, justifyContent: "flex-start" }]}><Ionicons name="crop-outline" size={18} color={colors.muted} /><Text style={[styles.cropInstruction, { flex: 1 }]}>{busy ? "Creating your outfit… Cropping and buttons are disabled while the server works." : "Drag the sides to keep only the outfit. Crop out as much background as possible; only this area is uploaded."}</Text></View>{!!error && <Text accessibilityRole="alert" style={styles.cameraError}>{error}</Text>}<View style={styles.cameraActionRow}><Pressable accessibilityRole="button" accessibilityLabel="Choose another photo" accessibilityState={{ disabled: busy }} disabled={busy} style={[styles.cameraSecondaryAction, { flex: 0, paddingHorizontal: 14 }, busy && { opacity: .45 }]} onPress={() => setPhoto(null)}><Ionicons name="close" size={20} color={colors.ink} /><Text style={styles.cameraSecondaryText}>Retake</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Upload cropped photo" accessibilityState={{ disabled: busy }} disabled={busy} style={[styles.cameraPrimaryAction, { paddingHorizontal: 20 }, busy && { opacity: .6 }]} onPress={upload}>{busy ? <ActivityIndicator color="#fff" /> : <><Ionicons name="sparkles" size={19} color="#fff" /><Text style={styles.primaryButtonText}>Create outfit</Text></>}</Pressable></View></View></View>;
 
-  if (result) return <ScrollView style={styles.resultScreen} contentContainerStyle={styles.resultScreenContent}><View style={styles.resultHero}><Image source={{ uri: result.styledOutfit }} style={styles.resultHeroImage} /></View><View style={styles.resultBody}><Text style={styles.resultSectionLabel}>OUTFIT CATEGORY</Text><CategoryChips categories={library.outfitCategories} selected={outfitCategory} onSelect={setOutfitCategory} /><View style={styles.resultSectionHeader}><Text style={styles.resultSectionTitle}>Pieces</Text><Text style={styles.detailCount}>{filterImportedPieces(result.pieces, pieceImports).length} of {result.pieces.length}</Text></View>{result.pieces.map((piece) => { const selectedCategory = pieceCategories[piece.id] ?? UNCATEGORIZED_PIECE; const imported = pieceImports[piece.id] !== false; return <ResultPiece key={piece.id} piece={piece} imported={imported} onToggleImport={() => setPieceImports({ ...pieceImports, [piece.id]: !imported })} categories={library.pieceCategories} selected={selectedCategory} mergeCandidates={library.pieces.filter((candidate) => candidate.categoryId === selectedCategory)} mergeTarget={pieceMerges[piece.id]} onMerge={(id) => setPieceMerges({ ...pieceMerges, [piece.id]: id })} onSelect={(id) => { setPieceCategories({ ...pieceCategories, [piece.id]: id }); setPieceMerges({ ...pieceMerges, [piece.id]: undefined }); }} />; })}<Pressable accessibilityRole="button" disabled={busy} style={styles.resultSaveButton} onPress={saveResult}>{busy ? <ActivityIndicator color="#fff" /> : <><Ionicons name="checkmark" size={21} color="#fff" /><Text style={styles.primaryButtonText}>Save outfit and pieces</Text></>}</Pressable></View></ScrollView>;
+  if (result) return <ScrollView style={styles.resultScreen} contentContainerStyle={styles.resultScreenContent}>
+    <View style={styles.resultHero}><Image accessibilityLabel="Generated outfit" source={{ uri: result.styledOutfit }} style={styles.resultHeroImage} /></View>
+    <View style={styles.resultBody}>
+      <Text style={styles.resultSectionLabel}>OUTFIT CATEGORY</Text>
+      <CategoryChips categories={library.outfitCategories} selected={outfitCategory} onSelect={setOutfitCategory} />
+      <View style={styles.resultSectionHeader}><Text style={styles.resultSectionTitle}>Pieces</Text><Text style={styles.detailCount}>{filterImportedPieces(result.pieces, pieceImports).length} of {result.pieces.length}</Text></View>
+      {result.pieces.map((piece) => {
+        const selectedCategory = pieceCategories[piece.id] ?? UNCATEGORIZED_PIECE;
+        const imported = pieceImports[piece.id] !== false;
+        return <ResultPiece key={piece.id} piece={piece} imported={imported} onToggleImport={() => setPieceImports({ ...pieceImports, [piece.id]: !imported })} categories={library.pieceCategories} selected={selectedCategory} mergeCandidates={library.pieces.filter((candidate) => candidate.categoryId === selectedCategory)} mergeTarget={pieceMerges[piece.id]} onMerge={(id) => setPieceMerges({ ...pieceMerges, [piece.id]: id })} onSelect={(id) => { setPieceCategories({ ...pieceCategories, [piece.id]: id }); setPieceMerges({ ...pieceMerges, [piece.id]: undefined }); }} />;
+      })}
+      {!!error && <Text accessibilityRole="alert" style={styles.cameraError}>{error}</Text>}
+      <Pressable accessibilityRole="button" accessibilityState={{ disabled: busy }} disabled={busy} style={[styles.resultSaveButton, busy && { opacity: .6 }]} onPress={saveResult}>{busy ? <ActivityIndicator color="#fff" /> : <><Ionicons name="checkmark" size={21} color="#fff" /><Text style={styles.primaryButtonText}>Save outfit and pieces</Text></>}</Pressable>
+    </View>
+  </ScrollView>;
 
   return null;
 }
@@ -182,13 +196,19 @@ function LibraryEmptyState({ kind }: { kind: "outfits" | "pieces" }) {
   return <View style={{ minHeight: 280, alignItems: "center", justifyContent: "center", paddingHorizontal: 30 }}><View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, alignItems: "center", justifyContent: "center", marginBottom: 18 }}><Ionicons name={outfits ? "woman-outline" : "shirt-outline"} size={34} color={colors.rust} /></View><Text style={{ fontFamily: "serif", fontSize: 24, color: colors.ink, marginBottom: 8 }}>No {kind} yet</Text><Text style={{ maxWidth: 290, textAlign: "center", fontSize: 14, lineHeight: 21, color: colors.muted }}>{outfits ? "Create your first outfit from a mirror selfie on the Camera page." : "Clothing pieces appear here when you save a generated outfit."}</Text></View>;
 }
 
-function CategoryEditorModal({ kind, editor, onClose, onAdd, onRename, onDelete }: { kind: CategoryKind; editor: CategoryEditor | null; onClose: () => void; onAdd: (name: string) => void; onRename: (id: string, name: string) => void; onDelete: (category: Category) => void }) {
+function CategoryEditorModalBase({ kind, editor, onClose, onAdd, onRename, onDelete }: { kind: CategoryKind; editor: CategoryEditor | null; onClose: () => void; onAdd: (name: string) => void; onRename: (id: string, name: string) => void; onDelete: (category: Category) => void }) {
   const [name, setName] = useState("");
   useEffect(() => { setName(editor?.mode === "edit" ? editor.category.name : ""); }, [editor]);
   const protectedId = kind === "outfit" ? UNCATEGORIZED_OUTFIT : UNCATEGORIZED_PIECE;
   const editing = editor?.mode === "edit" ? editor.category : null;
   function submit() { if (!name.trim()) return; if (editing) onRename(editing.id, name); else onAdd(name); onClose(); }
   return <Modal visible={!!editor} transparent animationType={Platform.OS === "web" ? "none" : "slide"} presentationStyle={Platform.OS === "web" ? undefined : "overFullScreen"} onRequestClose={onClose}><View style={styles.sheetBackdrop}><View style={styles.sheet}><View style={styles.sheetHeader}><Pressable accessibilityRole="button" accessibilityLabel="Cancel" onPress={onClose} style={styles.sheetHeaderButton}><Text style={styles.sheetHeaderAction}>Cancel</Text></Pressable><Text accessibilityRole="header" numberOfLines={1} style={styles.sheetTitle}>{editing ? "Edit category" : "New category"}</Text><Pressable accessibilityRole="button" accessibilityLabel={editing ? "Save category" : "Create category"} onPress={submit} style={[styles.sheetHeaderButton, styles.sheetHeaderButtonRight]}><Text style={[styles.sheetHeaderAction, styles.sheetDone]}>{editing ? "Save" : "Add"}</Text></Pressable></View><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.sheetContent}><Text style={styles.sheetSectionLabel}>{kind.toUpperCase()} CATEGORY</Text><View style={styles.sheetGroup}><TextInput autoFocus accessibilityLabel={editing ? `Category name for ${editing.name}` : `New ${kind} category name`} value={name} onChangeText={setName} placeholder="Category name" placeholderTextColor="#8D877C" style={styles.sheetInput} /></View>{editing && editing.id !== protectedId && <View style={styles.sheetGroup}><Pressable accessibilityRole="button" style={styles.sheetDeleteButton} onPress={() => onDelete(editing)}><Text style={styles.dangerText}>Delete category</Text></Pressable></View>}</ScrollView></View></View></Modal>;
+}
+
+function CategoryEditorModal(props: { kind: CategoryKind; editor: CategoryEditor | null; onClose: () => void; onAdd: (name: string) => void; onRename: (id: string, name: string) => void; onDelete: (category: Category) => void }) {
+  const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
+  useEffect(() => { if (!props.editor) setPendingDelete(null); }, [props.editor]);
+  return <><CategoryEditorModalBase {...props} onDelete={setPendingDelete} /><ConfirmModal visible={!!pendingDelete} title="Delete category?" message={`Items in ${pendingDelete?.name ?? "this category"} will move to Uncategorized.`} confirmLabel="Delete category" onCancel={() => setPendingDelete(null)} onConfirm={() => { if (pendingDelete) props.onDelete(pendingDelete); setPendingDelete(null); }} /></>;
 }
 
 function OutfitsPage({ library, setLibrary }: { library: LibraryState; setLibrary: (next: LibraryState) => void }) {
@@ -232,7 +252,7 @@ function ThemeSelector({ value, onChange }: { value: ThemePreference; onChange: 
 function SettingsPage({ library, setLibrary }: { library: LibraryState; setLibrary: (next: LibraryState) => void }) {
   const [categoryEditor, setCategoryEditor] = useState<{ kind: CategoryKind; editor: CategoryEditor } | null>(null);
   const categories = (kind: CategoryKind) => kind === "outfit" ? library.outfitCategories : library.pieceCategories;
-  function requestDelete(kind: CategoryKind, category: Category) { Alert.alert("Delete category?", `Items in ${category.name} will move to Uncategorized.`, [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: () => { setLibrary(deleteCategory(library, kind, category.id)); setCategoryEditor(null); } }]); }
+  function requestDelete(kind: CategoryKind, category: Category) { setLibrary(deleteCategory(library, kind, category.id)); setCategoryEditor(null); }
   return <><ScrollView contentContainerStyle={[styles.page, styles.settingsPage]}><Header title="Settings" /><Text style={styles.settingsSectionTitle}>Appearance</Text><ThemeSelector value={library.settings.theme} onChange={(theme) => setLibrary({ ...library, settings: { ...library.settings, theme } })} /><Text style={styles.settingsSectionTitle}>Grid size</Text><GridSelector label="Outfits" value={library.settings.outfitGridColumns} onChange={(outfitGridColumns) => setLibrary({ ...library, settings: { ...library.settings, outfitGridColumns } })} /><GridSelector label="Pieces" value={library.settings.pieceGridColumns} onChange={(pieceGridColumns) => setLibrary({ ...library, settings: { ...library.settings, pieceGridColumns } })} />{(["outfit", "piece"] as CategoryKind[]).map((kind) => <View key={kind}><Text style={styles.settingsSectionTitle}>{kind === "outfit" ? "Outfit categories" : "Piece categories"}</Text><View style={styles.settingsCategoryGroup}>{categories(kind).map((category, index) => <View key={category.id} style={[styles.settingsCategoryRow, index > 0 && styles.settingsCategoryBorder]}><Text style={styles.settingsCategoryName}>{category.name}</Text><Pressable accessibilityRole="button" accessibilityLabel={`Edit ${category.name}`} onPress={() => setCategoryEditor({ kind, editor: { mode: "edit", category } })} style={styles.settingsEditButton}><Text style={styles.sheetHeaderAction}>Edit</Text></Pressable></View>)}</View><Pressable accessibilityRole="button" style={styles.settingsAddButton} onPress={() => setCategoryEditor({ kind, editor: { mode: "add" } })}><Text style={styles.addCategoryText}>＋ Add {kind} category</Text></Pressable></View>)}</ScrollView>{categoryEditor && <CategoryEditorModal kind={categoryEditor.kind} editor={categoryEditor.editor} onClose={() => setCategoryEditor(null)} onAdd={(name) => setLibrary(addCategory(library, categoryEditor.kind, name))} onRename={(id, name) => setLibrary(renameCategory(library, categoryEditor.kind, id, name))} onDelete={(category) => requestDelete(categoryEditor.kind, category)} />}</>;
 }
 

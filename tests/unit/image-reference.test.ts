@@ -18,3 +18,13 @@ test("leaves remote and data images untouched", () => {
   assert.equal(storedImageName("https://example.com/outfit.jpg"), null);
   assert.equal(storedImageName("data:image/png;base64,abc"), null);
 });
+
+test("rejects empty stored and legacy image references", () => {
+  assert.equal(storedImageName("fashion-canvas-image://"), null);
+  assert.equal(storedImageName("file:///container/Documents/fashion-canvas-images/"), null);
+});
+
+test("preserves filenames and extensions from stored references", () => {
+  assert.equal(storedImageName("fashion-canvas-image://piece-with-spaces.png"), "piece-with-spaces.png");
+  assert.equal(storedImageName("file:///container/fashion-canvas-images/generated.webp"), "generated.webp");
+});
