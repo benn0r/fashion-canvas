@@ -20,6 +20,8 @@
       "bundleIdentifier": "app.fashioncanvas.mobile"
     },
     "android": {
+      "package": "app.fashioncanvas.mobile",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#F3EFE6"
       },
@@ -30,6 +32,11 @@
     "web": {
       "bundler": "metro",
       "favicon": "./assets/fashion-canvas-logo.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2cf6327a-0831-423b-8e4e-20941bc08a69"
+      }
     }
   }
 }

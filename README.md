@@ -38,6 +38,75 @@ npm test
 npm run test:e2e
 ```
 
+## Android builds
+
+Install EAS CLI and authenticate once:
+
+```bash
+npm install --global eas-cli
+eas login
+eas init
+```
+
+`eas init` creates or links the Expo project and writes its project ID into the app configuration.
+
+Configure the public production API URL in the Expo `production` and `preview` environments before building:
+
+```bash
+eas env:create --name EXPO_PUBLIC_FASHION_CANVAS_API_URL --environment preview --visibility plaintext
+eas env:create --name EXPO_PUBLIC_FASHION_CANVAS_API_URL --environment production --visibility plaintext
+```
+
+Create an APK that can be installed directly on an Android device:
+
+```bash
+eas build --platform android --profile preview
+```
+
+Create a signed release APK that uses the production environment:
+
+```bash
+eas build --platform android --profile production-apk
+```
+
+Create an Android App Bundle for Google Play:
+
+```bash
+eas build --platform android --profile production
+```
+
+For local Android development with Android Studio and the Android SDK installed:
+
+```bash
+npx expo run:android --device
+```
+
+### Mobile scripts
+
+Local run and release commands:
+
+```bash
+npm run android
+npm run android:device
+npm run android:release
+npm run ios
+npm run ios:device
+npm run ios:release
+```
+
+EAS preview and production builds:
+
+```bash
+npm run android:build
+npm run android:build:apk
+npm run android:build:store
+npm run ios:build
+npm run ios:build:release
+npm run ios:submit
+```
+
+The local release commands require Android Studio/Android SDK or Xcode respectively. EAS build and submit commands require an authenticated EAS CLI session.
+
 ## Persistence note
 
 Generated images are currently stored as returned data URLs in AsyncStorage. This is suitable for a prototype library. Before a large production library, move image data to the device filesystem or object storage and retain only durable URIs and metadata in AsyncStorage.

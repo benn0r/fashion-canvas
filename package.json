@@ -6,7 +6,17 @@
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
+    "android:device": "expo run:android --device",
+    "android:release": "expo run:android --device --variant release",
+    "android:build": "eas build --platform android --profile preview",
+    "android:build:apk": "eas build --platform android --profile production-apk",
+    "android:build:store": "eas build --platform android --profile production",
     "ios": "expo run:ios",
+    "ios:device": "expo run:ios --device",
+    "ios:release": "expo run:ios --device --configuration Release",
+    "ios:build": "eas build --platform ios --profile preview",
+    "ios:build:release": "eas build --platform ios --profile production",
+    "ios:submit": "eas submit --platform ios --latest",
     "web": "expo start --web",
     "build": "expo export --platform web --output-dir dist",
     "test": "node --import tsx --test tests/unit/*.test.ts",
@@ -25,6 +35,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.0",
+    "react-native-safe-area-context": "~5.7.0",
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
