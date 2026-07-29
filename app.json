@@ -25,9 +25,7 @@
       "adaptiveIcon": {
         "backgroundColor": "#F3EFE6"
       },
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "web": {
       "bundler": "metro",

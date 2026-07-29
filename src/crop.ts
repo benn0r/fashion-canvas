@@ -13,9 +13,17 @@ export function cropPixels(crop: CropRect, width: number, height: number) {
   };
 }
 
-export function resizeCrop(crop: CropRect, edge: "left" | "right" | "top" | "bottom", delta: number, minimum = .12): CropRect {
-  if (edge === "left") return { ...crop, left: Math.max(0, Math.min(crop.right - minimum, crop.left + delta)) };
-  if (edge === "right") return { ...crop, right: Math.min(1, Math.max(crop.left + minimum, crop.right + delta)) };
-  if (edge === "top") return { ...crop, top: Math.max(0, Math.min(crop.bottom - minimum, crop.top + delta)) };
+export function resizeCrop(
+  crop: CropRect,
+  edge: 'left' | 'right' | 'top' | 'bottom',
+  delta: number,
+  minimum = 0.12,
+): CropRect {
+  if (edge === 'left')
+    return { ...crop, left: Math.max(0, Math.min(crop.right - minimum, crop.left + delta)) };
+  if (edge === 'right')
+    return { ...crop, right: Math.min(1, Math.max(crop.left + minimum, crop.right + delta)) };
+  if (edge === 'top')
+    return { ...crop, top: Math.max(0, Math.min(crop.bottom - minimum, crop.top + delta)) };
   return { ...crop, bottom: Math.min(1, Math.max(crop.top + minimum, crop.bottom + delta)) };
 }
