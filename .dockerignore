@@ -1,0 +1,7 @@
+node_modules
+.expo
+dist
+.git
+test-results
+playwright-report
+.env

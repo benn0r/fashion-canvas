@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Fashion Canvas",
+    "slug": "fashion-canvas",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose a mirror selfie to create your outfit canvas.",
+          "cameraPermission": "Take a mirror selfie to create your outfit canvas."
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.fashioncanvas.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F3EFE6"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
