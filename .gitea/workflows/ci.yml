@@ -86,12 +86,20 @@ jobs:
           'build-tools;35.0.0' 'cmake;3.22.1'
       - name: Build signed release APK locally
         working-directory: android
-        run: >-
-          ./gradlew :app:assembleRelease --no-daemon --stacktrace
-          --max-workers=1
-          -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m"
-          -Dorg.gradle.parallel=false
-          -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+        run: |
+          attempt=1
+          until ./gradlew :app:assembleRelease --no-daemon --stacktrace \
+            --max-workers=1 \
+            -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m" \
+            -Dorg.gradle.parallel=false \
+            -PreactNativeArchitectures=arm64-v8a,armeabi-v7a; do
+            if [ "$attempt" -ge 3 ]; then
+              exit 1
+            fi
+            attempt=$((attempt + 1))
+            echo "Gradle build failed; retrying (attempt $attempt of 3)."
+            sleep 10
+          done
       - name: Verify APK signature
         run: >-
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose
