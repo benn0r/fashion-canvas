@@ -46,3 +46,49 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+
+  android-apk:
+    needs: [test, test-e2e]
+    if: ${{ gitea.event_name == 'push' && gitea.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    container:
+      image: reactnativecommunity/react-native-android:v20.1
+    env:
+      CI: 'true'
+      EXPO_PUBLIC_FASHION_CANVAS_API_URL: ${{ vars.EXPO_PUBLIC_FASHION_CANVAS_API_URL }}
+      ANDROID_VERSION_CODE: ${{ gitea.run_number }}
+      ANDROID_KEYSTORE_FILE: release.keystore
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - run: npm ci
+      - name: Validate Android build configuration
+        run: |
+          test -n "$EXPO_PUBLIC_FASHION_CANVAS_API_URL"
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
+      - name: Restore Expo Android keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
+          chmod 600 android/app/release.keystore
+      - name: Build signed release APK locally
+        working-directory: android
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+      - name: Verify APK signature
+        run: >-
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose
+          android/app/build/outputs/apk/release/app-release.apk
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: fashion-canvas-android-${{ gitea.sha }}
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30

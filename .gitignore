@@ -4,5 +4,9 @@ dist/
 test-results/
 playwright-report/
 .env
+credentials.json
+*.jks
+*.keystore
+!android/app/debug.keystore
 *.log
 .DS_Store

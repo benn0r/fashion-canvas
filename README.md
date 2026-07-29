@@ -113,13 +113,42 @@ npm run ios:submit
 
 The local release commands require Android Studio/Android SDK or Xcode respectively. EAS build and submit commands require an authenticated EAS CLI session.
 
+### Gitea Android APK
+
+The Gitea pipeline builds the signed Android APK locally with Gradle after the unit and browser E2E jobs pass. It does not use Expo's build cloud. The resulting `app-release.apk` is available from the workflow run as the `fashion-canvas-android-<commit>` artifact for 30 days.
+
+Download the existing Expo-managed Android credentials once so locally built APKs keep the same signing identity as previous Expo builds:
+
+```bash
+eas credentials -p android
+```
+
+Choose the Android build profile, then `credentials.json: Upload/Download credentials between EAS servers and your local json` and `Download credentials from EAS to credentials.json`. Never commit `credentials.json` or the downloaded keystore.
+
+Add these repository secrets in Gitea under **Settings → Actions → Secrets**:
+
+| Secret                      | Value                                                       |
+| --------------------------- | ----------------------------------------------------------- |
+| `ANDROID_KEYSTORE_BASE64`   | The downloaded keystore encoded as one base64 line          |
+| `ANDROID_KEYSTORE_PASSWORD` | `android.keystore.keystorePassword` from `credentials.json` |
+| `ANDROID_KEY_ALIAS`         | `android.keystore.keyAlias` from `credentials.json`         |
+| `ANDROID_KEY_PASSWORD`      | `android.keystore.keyPassword` from `credentials.json`      |
+
+On macOS, create the first value without line breaks using:
+
+```bash
+base64 -i keystore.jks | tr -d '\n'
+```
+
+Also add `EXPO_PUBLIC_FASHION_CANVAS_API_URL` under **Settings → Actions → Variables** with the public HTTPS server origin. This is intentionally a variable rather than a secret because Expo embeds every `EXPO_PUBLIC_` value in the APK.
+
 ## Persistence note
 
 Metadata and relationships are stored in AsyncStorage. Images are stored separately in Expo FileSystem on Android/iOS and IndexedDB on web; only stable image references are kept with the library metadata.
 
 ## CI
 
-The Gitea pipeline performs an uncached install in separate build, unit-test, browser-E2E, and image-publishing jobs. The published container is a web preview of the same Expo application; native iOS and Android releases should be signed through an appropriate mobile release workflow.
+The Gitea pipeline performs uncached installs in separate quality, web-build, unit-test, browser-E2E, and signed Android APK jobs. The APK is built entirely on the Gitea runner after the test jobs pass; Expo's cloud build service is not used.
 
 ## License
 
