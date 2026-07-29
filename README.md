@@ -5,9 +5,13 @@
 
 An Expo React Native wardrobe app that captures a mirror selfie, uploads it to Fashion Canvas Server, and saves the generated outfit and separately identified pieces with every AI-provided description.
 
-## Screenshot
+## Screenshots
 
-![Fashion Canvas mobile app](docs/screenshot.png)
+| Camera                                                                                 | Outfits                                                                                               |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| <img src="docs/screenshots/camera.jpg" alt="Camera screen" width="320" />              | <img src="docs/screenshots/outfits.jpg" alt="Outfits grouped by category" width="320" />              |
+| Pieces                                                                                 | Settings                                                                                              |
+| <img src="docs/screenshots/pieces.jpg" alt="Pieces grouped by category" width="320" /> | <img src="docs/screenshots/settings.jpg" alt="Appearance, grid, and category settings" width="320" /> |
 
 ## Features
 
@@ -119,4 +123,6 @@ The Gitea pipeline performs an uncached install in separate build, unit-test, br
 
 ## License
 
-MIT
+Fashion Canvas is available under the [PolyForm Noncommercial License 1.0.0](LICENSE). It is free to use, modify, and share for noncommercial purposes. Commercial use or monetization is reserved to the licensor and requires a separate commercial license.
+
+This is a source-available license, not an OSI-approved open-source license.
