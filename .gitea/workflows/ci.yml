@@ -105,7 +105,7 @@ jobs:
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose
           android/app/build/outputs/apk/release/app-release.apk
       - name: Upload signed APK
-        uses: actions/upload-artifact@v4
+        uses: ChristopherHX/gitea-upload-artifact@v4
         with:
           name: fashion-canvas-android-${{ gitea.sha }}
           path: android/app/build/outputs/apk/release/app-release.apk
