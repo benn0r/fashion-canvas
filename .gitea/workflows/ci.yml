@@ -80,6 +80,10 @@ jobs:
           test -n "$ANDROID_KEYSTORE_BASE64"
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
           chmod 600 android/app/release.keystore
+      - name: Install Android build dependencies
+        run: >-
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          'build-tools;35.0.0' 'cmake;3.22.1'
       - name: Build signed release APK locally
         working-directory: android
         run: >-
@@ -87,7 +91,6 @@ jobs:
           --max-workers=1
           -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m"
           -Dorg.gradle.parallel=false
-          -PnewArchEnabled=false
           -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
       - name: Verify APK signature
         run: >-
