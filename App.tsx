@@ -302,6 +302,12 @@ function createStyles(themeColors: typeof lightColors) {
   });
 }
 function withAlignedCardText(next: ReturnType<typeof createStyles>): ReturnType<typeof createStyles> {
-  return { ...next, gridDescription: { ...StyleSheet.flatten(next.gridDescription), padding: 0 } };
+  return {
+    ...next,
+    gridCard: { ...StyleSheet.flatten(next.gridCard), paddingHorizontal: 12 } as typeof next.gridCard,
+    gridImage: { ...StyleSheet.flatten(next.gridImage), width: "auto", marginHorizontal: -12 } as unknown as typeof next.gridImage,
+    gridBody: { ...StyleSheet.flatten(next.gridBody), paddingHorizontal: 0 } as typeof next.gridBody,
+    gridDescription: { ...StyleSheet.flatten(next.gridDescription), padding: 0 },
+  };
 }
 let styles = withAlignedCardText(createStyles(colors));
