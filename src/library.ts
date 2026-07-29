@@ -3,9 +3,56 @@ import type { Category, LibraryState } from "./types";
 export const UNCATEGORIZED_OUTFIT = "outfit-uncategorized";
 export const UNCATEGORIZED_PIECE = "piece-uncategorized";
 
+export function pieceOutfitIds(piece: LibraryState["pieces"][number]): string[] {
+  return piece.outfitIds ?? (piece.outfitId ? [piece.outfitId] : []);
+}
+
+export function mergeDescriptions(first: string, second: string): string {
+  const descriptions = [first, second].map((value) => value.trim()).filter(Boolean);
+  return [...new Set(descriptions)].join(" · ");
+}
+
+export type MergeDataSource = "target" | "source" | "combine";
+
+export function mergePieces(state: LibraryState, targetId: string, sourceId: string, dataSource: MergeDataSource = "combine"): LibraryState {
+  if (targetId === sourceId) return state;
+  const target = state.pieces.find((piece) => piece.id === targetId);
+  const source = state.pieces.find((piece) => piece.id === sourceId);
+  if (!target || !source || (dataSource === "combine" && target.categoryId !== source.categoryId)) return state;
+  const selectedData = dataSource === "source" ? source : target;
+  return {
+    ...state,
+    pieces: state.pieces
+      .filter((piece) => piece.id !== sourceId)
+      .map((piece) => piece.id === targetId ? {
+        ...piece,
+        ...(dataSource === "combine" ? { description: mergeDescriptions(target.description, source.description) } : {
+          image: selectedData.image,
+          label: selectedData.label,
+          description: selectedData.description,
+          aiCategory: selectedData.aiCategory,
+          categoryId: selectedData.categoryId,
+        }),
+        outfitIds: [...new Set([...pieceOutfitIds(target), ...pieceOutfitIds(source)])],
+      } : piece),
+  };
+}
+
+export function removeOutfit(state: LibraryState, outfitId: string): LibraryState {
+  return {
+    ...state,
+    outfits: state.outfits.filter((outfit) => outfit.id !== outfitId),
+    pieces: state.pieces.flatMap((piece) => {
+      const outfitIds = pieceOutfitIds(piece).filter((id) => id !== outfitId);
+      return outfitIds.length ? [{ ...piece, outfitIds }] : [];
+    }),
+  };
+}
+
 export function initialLibrary(): LibraryState {
   return {
     outfits: [], pieces: [],
+    settings: { outfitGridColumns: 2, pieceGridColumns: 2 },
     outfitCategories: [
       { id: UNCATEGORIZED_OUTFIT, name: "Uncategorized", kind: "outfit" },
       { id: "outfit-casual", name: "Casual", kind: "outfit" },

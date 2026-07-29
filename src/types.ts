@@ -1,4 +1,5 @@
 export type CategoryKind = "outfit" | "piece";
+export type GridColumns = 2 | 3 | 4;
 
 export interface Category { id: string; name: string; kind: CategoryKind }
 
@@ -12,7 +13,8 @@ export interface SavedOutfit {
 
 export interface SavedPiece {
   id: string;
-  outfitId: string;
+  outfitIds: string[];
+  outfitId?: string;
   image: string;
   label: string;
   description: string;
@@ -25,6 +27,7 @@ export interface LibraryState {
   pieces: SavedPiece[];
   outfitCategories: Category[];
   pieceCategories: Category[];
+  settings: { outfitGridColumns: GridColumns; pieceGridColumns: GridColumns };
 }
 
 export interface ApiPiece { id: string; image: string; label: string; description: string; category: string }

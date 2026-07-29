@@ -3,6 +3,7 @@
     "name": "Fashion Canvas",
     "slug": "fashion-canvas",
     "version": "1.0.0",
+    "icon": "./assets/fashion-canvas-logo.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "plugins": [
@@ -27,7 +28,8 @@
       ]
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/fashion-canvas-logo.png"
     }
   }
 }

@@ -11,11 +11,12 @@ An Expo React Native wardrobe app that captures a mirror selfie, uploads it to F
 
 ## Features
 
-- Photo page with camera and photo-library capture, upload progress, generated outfit preview, and category selection for the outfit and every piece.
-- Outfits page grouped into category accordions, with inline edit controls and a bottom add-category modal.
-- Pieces page uses the same accordion, inline edit, and modal-based category workflow.
-- Outfit modal showing every mapped piece and its AI-provided description.
-- Local persistence via AsyncStorage, including images, descriptions, categories, and outfit-to-piece relationships.
+- Camera page with camera and photo-library capture, upload progress, generated outfit preview, and category selection for the outfit and every piece.
+- Outfits and Pieces pages grouped into compact category accordions with configurable 2/3/4-column grids.
+- Settings page for outfit and piece category management plus independent grid-density controls.
+- Same-category pieces can be merged while saving an AI result or from piece details; outfit links and AI descriptions are preserved.
+- Linked outfit and piece detail sheets with bidirectional navigation and AI-provided descriptions.
+- Local-only persistence: metadata and relationships in AsyncStorage, images in Expo FileSystem on Android/iOS, and image blobs in IndexedDB on web.
 - Deleting a category safely moves its contents to `Uncategorized`.
 
 ## Development

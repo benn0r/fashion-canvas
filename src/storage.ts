@@ -7,7 +7,11 @@ const STORAGE_KEY = "fashion-canvas-library-v1";
 export async function loadLibrary(): Promise<LibraryState> {
   const stored = await AsyncStorage.getItem(STORAGE_KEY);
   if (!stored) return initialLibrary();
-  try { return { ...initialLibrary(), ...JSON.parse(stored) as LibraryState }; }
+  try {
+    const defaults = initialLibrary();
+    const parsed = JSON.parse(stored) as Partial<LibraryState>;
+    return { ...defaults, ...parsed, pieces: (parsed.pieces ?? defaults.pieces).map((piece) => ({ ...piece, outfitIds: piece.outfitIds ?? (piece.outfitId ? [piece.outfitId] : []) })), settings: { ...defaults.settings, ...parsed.settings } };
+  }
   catch { return initialLibrary(); }
 }
 
