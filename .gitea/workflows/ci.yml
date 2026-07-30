@@ -94,7 +94,7 @@ jobs:
       - name: Bundle Android JavaScript
         working-directory: android
         env:
-          NODE_OPTIONS: --max-old-space-size=512
+          NODE_OPTIONS: --max-old-space-size=384
         run: |
           attempt=1
           until ./gradlew :app:createBundleReleaseJsAndAssets \
@@ -117,7 +117,7 @@ jobs:
           until ./gradlew :app:assembleRelease \
             --no-daemon --stacktrace \
             --max-workers=1 \
-            -Dorg.gradle.jvmargs="-Xmx768m -XX:MaxMetaspaceSize=768m" \
+            -Dorg.gradle.jvmargs="-Xmx512m -XX:MaxMetaspaceSize=768m" \
             -Dorg.gradle.parallel=false \
             -Pkotlin.compiler.execution.strategy=in-process \
             -PreactNativeArchitectures=arm64-v8a,armeabi-v7a; do
