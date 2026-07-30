@@ -1644,7 +1644,9 @@ function SettingsPage({
   return (
     <>
       <ScrollView contentContainerStyle={[styles.page, styles.settingsPage]}>
-        <Text style={styles.settingsSectionTitle}>Appearance</Text>
+        <Text style={[styles.settingsSectionTitle, styles.settingsFirstSectionTitle]}>
+          Appearance
+        </Text>
         <ThemeSelector
           value={library.settings.theme}
           onChange={(theme) => setLibrary({ ...library, settings: { ...library.settings, theme } })}
@@ -2592,7 +2594,14 @@ function createStyles(themeColors: typeof lightColors) {
     brand: { fontFamily: 'serif', fontSize: 19, color: colors.ink },
     page: { padding: 20, paddingBottom: 50, maxWidth: 900, width: '100%', alignSelf: 'center' },
     libraryPage: { paddingTop: 4, paddingHorizontal: 16 },
-    libraryFullscreen: { paddingHorizontal: 12, paddingTop: 0, paddingBottom: 32, width: '100%' },
+    libraryFullscreen: {
+      flexGrow: 1,
+      justifyContent: 'flex-start',
+      paddingHorizontal: 12,
+      paddingTop: 0,
+      paddingBottom: 32,
+      width: '100%',
+    },
     resultScreen: { flex: 1, backgroundColor: colors.paper },
     resultScreenContent: { paddingBottom: 32 },
     resultHero: {
@@ -2985,7 +2994,12 @@ function createStyles(themeColors: typeof lightColors) {
     sheetGroup: { backgroundColor: colors.card, borderRadius: 11, overflow: 'hidden' },
     sheetInput: { fontSize: 17, color: colors.ink, paddingHorizontal: 16, paddingVertical: 15 },
     sheetDeleteButton: { minHeight: 50, alignItems: 'center', justifyContent: 'center' },
-    settingsPage: { paddingTop: 4, paddingHorizontal: 16 },
+    settingsPage: {
+      flexGrow: 1,
+      justifyContent: 'flex-start',
+      paddingTop: 4,
+      paddingHorizontal: 16,
+    },
     settingsSectionTitle: {
       fontSize: 12,
       letterSpacing: 1.2,
@@ -2996,6 +3010,7 @@ function createStyles(themeColors: typeof lightColors) {
       marginBottom: 9,
       marginLeft: 4,
     },
+    settingsFirstSectionTitle: { marginTop: 8 },
     settingsGroup: {
       backgroundColor: colors.card,
       borderWidth: 1,
