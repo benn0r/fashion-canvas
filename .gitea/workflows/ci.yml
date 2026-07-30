@@ -84,14 +84,27 @@ jobs:
         run: >-
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           'build-tools;35.0.0' 'cmake;3.22.1'
+      - name: Bundle Android JavaScript
+        working-directory: android
+        env:
+          NODE_OPTIONS: --max-old-space-size=512
+        run: >-
+          ./gradlew :app:createBundleReleaseJsAndAssets --no-daemon --stacktrace
+          --max-workers=1
+          -Dorg.gradle.jvmargs="-Xmx768m -XX:MaxMetaspaceSize=256m"
+          -Dorg.gradle.parallel=false
+          -Pkotlin.compiler.execution.strategy=in-process
       - name: Build signed release APK locally
         working-directory: android
         run: |
           attempt=1
-          until ./gradlew :app:assembleRelease --no-daemon --stacktrace \
+          until ./gradlew :app:assembleRelease \
+            -x :app:createBundleReleaseJsAndAssets \
+            --no-daemon --stacktrace \
             --max-workers=1 \
-            -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m" \
+            -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=320m" \
             -Dorg.gradle.parallel=false \
+            -Pkotlin.compiler.execution.strategy=in-process \
             -PreactNativeArchitectures=arm64-v8a,armeabi-v7a; do
             if [ "$attempt" -ge 3 ]; then
               exit 1
