@@ -80,10 +80,6 @@ jobs:
           test -n "$ANDROID_KEYSTORE_BASE64"
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
           chmod 600 android/app/release.keystore
-      - name: Install Android build dependencies
-        run: >-
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          'build-tools;35.0.0' 'cmake;3.22.1'
       - name: Bundle Android JavaScript
         working-directory: android
         env:
