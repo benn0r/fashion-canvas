@@ -1842,7 +1842,7 @@ function OutfitModal({
   return (
     <>
       <Modal
-        visible={!!outfit}
+        visible={!!outfit && !confirmDelete}
         animationType={Platform.OS === 'web' ? 'none' : 'slide'}
         presentationStyle={Platform.OS === 'web' ? undefined : 'overFullScreen'}
         transparent
@@ -2257,7 +2257,10 @@ function PieceModal({
   return (
     <>
       <Modal
-        visible={!!piece}
+        // iOS cannot reliably present a second React Native Modal while this
+        // details modal is still presented. Hide it before showing an action
+        // sheet or confirmation modal.
+        visible={!!piece && action === null}
         animationType={Platform.OS === 'web' ? 'none' : 'slide'}
         presentationStyle={Platform.OS === 'web' ? undefined : 'overFullScreen'}
         transparent
