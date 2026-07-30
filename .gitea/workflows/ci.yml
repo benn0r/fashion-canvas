@@ -4,6 +4,10 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: fashion-canvas-ci-${{ gitea.ref }}
+  cancel-in-progress: true
+
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -89,6 +93,23 @@ jobs:
             fi
             attempt=$((attempt + 1))
             echo "Android SDK install failed; retrying (attempt $attempt of 3)."
+            sleep 10
+          done
+      - name: Warm Gradle configuration
+        working-directory: android
+        run: |
+          attempt=1
+          until ./gradlew help \
+            --no-daemon --stacktrace \
+            --max-workers=1 \
+            -Dorg.gradle.jvmargs="-Xmx512m -XX:MaxMetaspaceSize=512m" \
+            -Dorg.gradle.parallel=false \
+            -Pkotlin.compiler.execution.strategy=in-process; do
+            if [ "$attempt" -ge 3 ]; then
+              exit 1
+            fi
+            attempt=$((attempt + 1))
+            echo "Gradle warm-up failed; retrying (attempt $attempt of 3)."
             sleep 10
           done
       - name: Bundle Android JavaScript
