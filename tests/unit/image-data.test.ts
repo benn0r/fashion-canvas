@@ -21,6 +21,7 @@ test('ordinary image URLs remain available to the network storage path', () => {
 test('unsupported or malformed image data URLs are rejected', () => {
   for (const source of [
     'data:image/png;base64',
+    'data:;base64,aGVsbG8=',
     'data:text/plain;base64,aGVsbG8=',
     'data:image/png,aGVsbG8=',
     'data:image/png;base64,',

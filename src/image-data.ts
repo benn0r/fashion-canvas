@@ -11,10 +11,12 @@ export function parseBase64ImageData(source: string): Base64ImageData | null {
   const separator = source.indexOf(',');
   if (separator < 0) throw invalidImageData();
 
-  const [contentType, ...parameters] = source.slice(5, separator).split(';');
+  const metadata = source.slice(5, separator).split(';');
+  const contentType = metadata[0]!;
+  const parameters = metadata.slice(1);
   const payload = source.slice(separator + 1).trim();
   if (
-    !contentType?.toLowerCase().startsWith('image/') ||
+    !contentType.toLowerCase().startsWith('image/') ||
     !parameters.some((parameter) => parameter.toLowerCase() === 'base64') ||
     !payload
   )
