@@ -44,14 +44,6 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24 }
       - run: npm ci
-      - name: Cache Playwright browser
-        uses: actions/cache@v4
-        continue-on-error: true
-        with:
-          path: /root/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
 
@@ -96,12 +88,21 @@ jobs:
         working-directory: android
         env:
           NODE_OPTIONS: --max-old-space-size=512
-        run: >-
-          ./gradlew :app:createBundleReleaseJsAndAssets
-          --no-daemon --stacktrace --max-workers=1
-          -Dorg.gradle.jvmargs="-Xmx512m -XX:MaxMetaspaceSize=512m"
-          -Dorg.gradle.parallel=false
-          -Pkotlin.compiler.execution.strategy=in-process
+        run: |
+          attempt=1
+          until ./gradlew :app:createBundleReleaseJsAndAssets \
+            --no-daemon --stacktrace \
+            --max-workers=1 \
+            -Dorg.gradle.jvmargs="-Xmx512m -XX:MaxMetaspaceSize=512m" \
+            -Dorg.gradle.parallel=false \
+            -Pkotlin.compiler.execution.strategy=in-process; do
+            if [ "$attempt" -ge 3 ]; then
+              exit 1
+            fi
+            attempt=$((attempt + 1))
+            echo "Android bundle failed; retrying (attempt $attempt of 3)."
+            sleep 10
+          done
       - name: Build signed release APK locally
         working-directory: android
         run: |
