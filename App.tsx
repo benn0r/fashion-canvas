@@ -2598,7 +2598,7 @@ function createStyles(themeColors: typeof lightColors) {
       flexGrow: 1,
       justifyContent: 'flex-start',
       paddingHorizontal: 12,
-      paddingTop: 0,
+      paddingTop: 12,
       paddingBottom: 32,
       width: '100%',
     },
@@ -2997,7 +2997,7 @@ function createStyles(themeColors: typeof lightColors) {
     settingsPage: {
       flexGrow: 1,
       justifyContent: 'flex-start',
-      paddingTop: 4,
+      paddingTop: 12,
       paddingHorizontal: 16,
     },
     settingsSectionTitle: {
@@ -3010,7 +3010,7 @@ function createStyles(themeColors: typeof lightColors) {
       marginBottom: 9,
       marginLeft: 4,
     },
-    settingsFirstSectionTitle: { marginTop: 8 },
+    settingsFirstSectionTitle: { marginTop: 0 },
     settingsGroup: {
       backgroundColor: colors.card,
       borderWidth: 1,
