@@ -108,17 +108,6 @@ function CategoryChips({
   );
 }
 
-function Header({ title }: { title: string }) {
-  const settingsAlignment = title === 'Settings' ? { marginLeft: -4, marginTop: -4 } : undefined;
-  return (
-    <View style={[styles.simplePageHeader, settingsAlignment]}>
-      <Text accessibilityRole="header" style={styles.simplePageTitle}>
-        {title}
-      </Text>
-    </View>
-  );
-}
-
 function StoredImage({ uri, style }: { uri: string; style: StyleProp<ImageStyle> }) {
   const [resolved, setResolved] = useState(uri);
   useEffect(() => {
@@ -1084,7 +1073,6 @@ function OutfitsPage({
   return (
     <>
       <ScrollView contentContainerStyle={styles.libraryFullscreen}>
-        <Header title="Outfits" />
         {!library.outfits.length && <LibraryEmptyState kind="outfits" />}
         {library.outfitCategories
           .filter((category) => library.outfits.some((item) => item.categoryId === category.id))
@@ -1457,7 +1445,6 @@ function PiecesPage({
   return (
     <>
       <ScrollView contentContainerStyle={styles.libraryFullscreen}>
-        <Header title="Pieces" />
         {!library.pieces.length && <LibraryEmptyState kind="pieces" />}
         {library.pieceCategories
           .filter((category) => library.pieces.some((item) => item.categoryId === category.id))
@@ -1657,7 +1644,6 @@ function SettingsPage({
   return (
     <>
       <ScrollView contentContainerStyle={[styles.page, styles.settingsPage]}>
-        <Header title="Settings" />
         <Text style={styles.settingsSectionTitle}>Appearance</Text>
         <ThemeSelector
           value={library.settings.theme}
@@ -2424,8 +2410,6 @@ function createStyles(themeColors: typeof lightColors) {
   colors = themeColors;
   return StyleSheet.create({
     app: { flex: 1, backgroundColor: colors.paper },
-    simplePageHeader: { paddingTop: 14, paddingBottom: 12 },
-    simplePageTitle: { fontFamily: 'serif', fontSize: 28, lineHeight: 34, color: colors.ink },
     cameraWorkspace: { flex: 1, backgroundColor: '#111' },
     cameraLanding: { flex: 1, backgroundColor: '#111' },
     cameraEmptyStage: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },

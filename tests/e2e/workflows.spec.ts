@@ -121,7 +121,6 @@ test('generates, configures, and saves an outfit while locking the upload worksp
   await expect(page.getByText('2 of 3')).toBeVisible();
   await page.getByRole('button', { name: 'Save outfit and pieces' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Outfits' })).toBeVisible();
   await page.getByRole('button', { name: 'Expand Casual' }).click();
   const outfitCard = page.getByRole('button', {
     name: /Open outfit Rust blouse: A tailored rust linen blouse/,
@@ -268,7 +267,6 @@ test('reports a local image save failure and can retry an outfit with no pieces'
   await expect(page.getByRole('alert')).toContainText('Could not save generated image (500)');
   await expect(save).toBeEnabled();
   await save.click();
-  await expect(page.getByRole('heading', { name: 'Outfits' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Open outfit/ })).toBeVisible();
   expect(storageAttempts).toBe(2);
 });
@@ -276,14 +274,12 @@ test('reports a local image save failure and can retry an outfit with no pieces'
 test('shows useful empty states on both library views', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('tab', { name: 'Outfits' }).click();
-  await expect(page.getByRole('heading', { name: 'Outfits' })).toBeVisible();
   await expect(page.getByText('No outfits yet')).toBeVisible();
   await expect(
     page.getByText('Create your first outfit from a mirror selfie on the Camera page.'),
   ).toBeVisible();
 
   await page.getByRole('tab', { name: 'Pieces' }).click();
-  await expect(page.getByRole('heading', { name: 'Pieces' })).toBeVisible();
   await expect(page.getByText('No pieces yet')).toBeVisible();
   await expect(
     page.getByText('Clothing pieces appear here when you save a generated outfit.'),

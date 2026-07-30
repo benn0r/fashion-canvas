@@ -5,18 +5,18 @@ test('navigates among camera, outfits, and pieces pages', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Add a mirror selfie' })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Camera' })).toBeVisible();
   await page.getByRole('tab', { name: 'Outfits' }).click();
-  await expect(page.getByRole('heading', { name: 'Outfits' })).toBeVisible();
+  await expect(page.getByText('No outfits yet')).toBeVisible();
   await expect(page.getByRole('button', { name: /Uncategorized/ })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Edit Casual' })).toHaveCount(0);
   await page.getByRole('tab', { name: 'Pieces' }).click();
-  await expect(page.getByRole('heading', { name: 'Pieces' })).toBeVisible();
+  await expect(page.getByText('No pieces yet')).toBeVisible();
   await expect(page.getByRole('button', { name: /Uncategorized/ })).toHaveCount(0);
   await page.getByRole('tab', { name: 'Settings' }).click();
-  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  await expect(page.getByText('Appearance')).toBeVisible();
   await expect(page.getByRole('radio', { name: 'System appearance, selected' })).toBeVisible();
   await page.getByRole('radio', { name: 'Dark appearance' }).click();
   await expect(page.getByRole('radio', { name: 'Dark appearance, selected' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Settings' })).toHaveCSS(
+  await expect(page.getByText('Fashion Canvas', { exact: true })).toHaveCSS(
     'color',
     'rgb(245, 241, 232)',
   );
