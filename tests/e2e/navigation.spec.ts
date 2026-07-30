@@ -27,10 +27,12 @@ test('navigates among camera, outfits, and pieces pages', async ({ page }) => {
     page.getByRole('button', { name: 'Use 3 columns for outfits, selected' }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Edit Casual' }).click();
-  await expect(page.getByLabel('Category name for Casual')).toBeVisible();
+  await expect(page.getByLabel('Category name for Casual')).toHaveValue('Casual');
   await page.getByRole('button', { name: 'Cancel' }).click();
   await page.getByRole('button', { name: '＋ Add outfit category' }).click();
-  await page.getByLabel('New outfit category name').fill('Travel');
+  const newOutfitCategory = page.getByLabel('New outfit category name');
+  await expect(newOutfitCategory).toHaveValue('');
+  await newOutfitCategory.fill('Travel');
   await page.getByRole('button', { name: 'Create category' }).click();
   await expect(page.getByRole('button', { name: 'Edit Travel' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Edit Uncategorized' })).toHaveCount(2);
@@ -117,8 +119,12 @@ test('category headers preview their saved images', async ({ page }) => {
   await expect(page.getByText('DESCRIPTION', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Outfits grid, 4 columns')).toBeVisible();
   await page.getByRole('button', { name: 'Edit piece' }).click();
-  await page.getByLabel('Piece title').fill('Rust linen shirt');
-  await page.getByLabel('Piece description').fill('A tailored rust linen shirt');
+  const pieceTitle = page.getByLabel('Piece title');
+  const pieceDescription = page.getByLabel('Piece description');
+  await expect(pieceTitle).toHaveValue('Linen shirt');
+  await expect(pieceDescription).toHaveValue('A rust linen shirt');
+  await pieceTitle.fill('Rust linen shirt');
+  await pieceDescription.fill('A tailored rust linen shirt');
   await page.getByRole('radio', { name: 'Use category Tops' }).click();
   await page.getByRole('button', { name: 'Save piece' }).click();
   await expect(

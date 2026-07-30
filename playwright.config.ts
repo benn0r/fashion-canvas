@@ -2,7 +2,10 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: 'tests/e2e',
-  retries: process.env.CI ? 1 : 0,
+  // The regular Gitea runner also builds and tests the app. Keeping browser
+  // execution to one worker in CI avoids resource contention without hiding
+  // failures behind retries. Local runs still use Playwright's default.
+  workers: process.env.CI ? 1 : undefined,
   use: {
     baseURL: 'http://127.0.0.1:4174',
     viewport: { width: 390, height: 844 },

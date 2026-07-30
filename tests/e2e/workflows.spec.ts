@@ -321,10 +321,14 @@ test('persists appearance, grids, and complete outfit and piece category CRUD', 
   await page.getByRole('button', { name: '＋ Add outfit category' }).click();
   await page.getByRole('button', { name: 'Create category' }).click();
   await expect(page.getByRole('heading', { name: 'New category' })).toBeVisible();
-  await page.getByLabel('New outfit category name').fill('Travel');
+  const newOutfitCategory = page.getByLabel('New outfit category name');
+  await expect(newOutfitCategory).toHaveValue('');
+  await newOutfitCategory.fill('Travel');
   await page.getByRole('button', { name: 'Create category' }).click();
   await page.getByRole('button', { name: 'Edit Travel' }).click();
-  await page.getByLabel('Category name for Travel').fill('Journeys');
+  const travelCategory = page.getByLabel('Category name for Travel');
+  await expect(travelCategory).toHaveValue('Travel');
+  await travelCategory.fill('Journeys');
   await page.getByRole('button', { name: 'Save category' }).click();
   await expect(page.getByRole('button', { name: 'Edit Journeys' })).toBeVisible();
 
@@ -340,10 +344,14 @@ test('persists appearance, grids, and complete outfit and piece category CRUD', 
   await expect(page.getByRole('button', { name: 'Edit Journeys' })).toHaveCount(0);
 
   await page.getByRole('button', { name: '＋ Add piece category' }).click();
-  await page.getByLabel('New piece category name').fill('Jewelry');
+  const newPieceCategory = page.getByLabel('New piece category name');
+  await expect(newPieceCategory).toHaveValue('');
+  await newPieceCategory.fill('Jewelry');
   await page.getByRole('button', { name: 'Create category' }).click();
   await page.getByRole('button', { name: 'Edit Jewelry' }).click();
-  await page.getByLabel('Category name for Jewelry').fill('Adornments');
+  const jewelryCategory = page.getByLabel('Category name for Jewelry');
+  await expect(jewelryCategory).toHaveValue('Jewelry');
+  await jewelryCategory.fill('Adornments');
   await page.getByRole('button', { name: 'Save category' }).click();
   await expect(page.getByRole('button', { name: 'Edit Adornments' })).toBeVisible();
   await page.getByRole('button', { name: 'Edit Adornments' }).click();
@@ -421,7 +429,9 @@ test('supports piece edit, same-category merge, cross-navigation, and both delet
   await page.getByRole('button', { name: 'Open piece Current top' }).click();
 
   await page.getByRole('button', { name: 'Edit piece' }).click();
-  await page.getByLabel('Piece title').fill('');
+  const pieceTitle = page.getByLabel('Piece title');
+  await expect(pieceTitle).toHaveValue('Current top');
+  await pieceTitle.fill('');
   await expect(page.getByRole('button', { name: 'Save piece' })).toBeDisabled();
   await page.getByRole('button', { name: 'Cancel edit' }).click();
   await expect(page.getByRole('dialog').getByText('Current top', { exact: true })).toBeVisible();
