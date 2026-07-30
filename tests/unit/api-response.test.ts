@@ -37,6 +37,8 @@ test("surfaces the server's rate-limit message", () => {
 
 test('adds a retry hint when a rate-limit response has no message', () => {
   assert.throws(() => parseOutfitResponse(429, '', '42'), /about 42 seconds/);
+  assert.throws(() => parseOutfitResponse(429, ''), /few minutes/);
+  assert.throws(() => parseOutfitResponse(429, '', '0'), /few minutes/);
   assert.throws(() => parseOutfitResponse(429, '', 'invalid'), /few minutes/);
 });
 

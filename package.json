@@ -23,7 +23,7 @@
     "lint": "expo lint . --max-warnings=0",
     "lint:fix": "expo lint . --fix",
     "build": "expo export --platform web --output-dir dist",
-    "test": "node --experimental-test-coverage --test-coverage-lines=98 --test-coverage-branches=97 --test-coverage-functions=100 --import tsx --test tests/unit/index.test.ts",
+    "test": "tsc --project tests/unit/tsconfig.json && node --experimental-test-coverage --test-coverage-exclude='.unit-test-dist/tests/**' --test-coverage-lines=98 --test-coverage-branches=97 --test-coverage-functions=100 --test .unit-test-dist/tests/unit/index.test.js",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit"
   },
