@@ -2,6 +2,7 @@ name: Build and test
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
 
 concurrency:
@@ -52,7 +53,7 @@ jobs:
 
   build-android-apk:
     needs: [test, test-e2e]
-    if: ${{ gitea.event_name == 'push' && gitea.ref == 'refs/heads/main' }}
+    if: ${{ gitea.event_name == 'push' && (gitea.ref == 'refs/heads/main' || startsWith(gitea.ref, 'refs/tags/v')) }}
     runs-on: ubuntu-latest
     container:
       image: reactnativecommunity/react-native-android:v20.1
@@ -70,9 +71,33 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24 }
       - run: npm ci
+      - name: Configure Android release version
+        env:
+          RELEASE_REF: ${{ gitea.ref }}
+          RELEASE_REF_NAME: ${{ gitea.ref_name }}
+          RELEASE_SHA: ${{ gitea.sha }}
+        run: |
+          if printf '%s\n' "$RELEASE_REF" | grep -q '^refs/tags/v'; then
+            if ! printf '%s\n' "$RELEASE_REF_NAME" |
+              grep -Eq '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
+              echo "Release tags must use semantic versioning, for example v1.2.3."
+              exit 1
+            fi
+            version_name=${RELEASE_REF_NAME#v}
+            release_id=$RELEASE_REF_NAME
+          else
+            version_name=1.0.0
+            release_id=$RELEASE_SHA
+          fi
+
+          printf 'ANDROID_VERSION_NAME=%s\n' "$version_name" >> "$GITHUB_ENV"
+          printf 'ANDROID_RELEASE_ID=%s\n' "$release_id" >> "$GITHUB_ENV"
+          echo "Building Android version $version_name (code $ANDROID_VERSION_CODE)."
       - name: Validate Android build configuration
         run: |
           test -n "$EXPO_PUBLIC_FASHION_CANVAS_API_URL"
+          test -n "$ANDROID_VERSION_NAME"
+          test -n "$ANDROID_VERSION_CODE"
           test -n "$ANDROID_KEYSTORE_PASSWORD"
           test -n "$ANDROID_KEY_ALIAS"
           test -n "$ANDROID_KEY_PASSWORD"
@@ -178,12 +203,12 @@ jobs:
       - name: Upload signed APK
         uses: ChristopherHX/gitea-upload-artifact@v4
         with:
-          name: fashion-canvas-android-${{ gitea.sha }}
+          name: fashion-canvas-android-${{ env.ANDROID_RELEASE_ID }}
           path: android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
       - name: Upload signed Android App Bundle
         uses: ChristopherHX/gitea-upload-artifact@v4
         with:
-          name: fashion-canvas-android-store-${{ gitea.sha }}
+          name: fashion-canvas-android-store-${{ env.ANDROID_RELEASE_ID }}
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 30
