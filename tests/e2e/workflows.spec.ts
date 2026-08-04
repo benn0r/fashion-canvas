@@ -1,6 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const STORAGE_KEY = 'fashion-canvas-library-v1';
+const AUTH_STORAGE_KEY = 'fashion-canvas-auth-v1';
+const TEST_SESSION = {
+  token: 'e2e-auth-token',
+  expiresAt: '2099-01-01T00:00:00.000Z',
+  user: { username: 'fashion_tester', approved: true },
+};
 const PHOTO = {
   name: 'mirror-selfie.svg',
   mimeType: 'image/svg+xml',
@@ -39,6 +45,13 @@ const generated = {
     },
   ],
 };
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(
+    ({ key, session }) => localStorage.setItem(key, JSON.stringify(session)),
+    { key: AUTH_STORAGE_KEY, session: TEST_SESSION },
+  );
+});
 
 async function choosePhoto(page: Page) {
   const chooserPromise = page.waitForEvent('filechooser');
@@ -82,6 +95,7 @@ test('generates, configures, and saves an outfit while locking the upload worksp
   await page.route('**/api/outfits', async (route) => {
     uploads += 1;
     expect(route.request().method()).toBe('POST');
+    expect(route.request().headers().authorization).toBe('Bearer e2e-auth-token');
     expect(route.request().headers()['content-type']).toContain('multipart/form-data');
     await requestGate;
     await route.fulfill({

@@ -1,5 +1,18 @@
 import { test, expect } from '@playwright/test';
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      'fashion-canvas-auth-v1',
+      JSON.stringify({
+        token: 'e2e-auth-token',
+        expiresAt: '2099-01-01T00:00:00.000Z',
+        user: { username: 'fashion_tester', approved: true },
+      }),
+    ),
+  );
+});
+
 test('navigates among camera, outfits, and pieces pages', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Add a mirror selfie' })).toBeVisible();

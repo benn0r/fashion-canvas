@@ -24,6 +24,14 @@ import {
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createOutfit } from './src/api';
 import {
+  clearSession,
+  loadSession,
+  login,
+  register,
+  saveSession,
+  type AuthSession,
+} from './src/auth';
+import {
   addCategory,
   deleteCategory,
   filterImportedPieces,
@@ -336,10 +344,12 @@ function PhotoPage({
   library,
   setLibrary,
   onSaved,
+  authToken,
 }: {
   library: LibraryState;
   setLibrary: (next: LibraryState) => void;
   onSaved: () => void;
+  authToken: string;
 }) {
   const [photo, setPhoto] = useState<SelectedPhoto | null>(null);
   const [crop, setCrop] = useState<CropRect>(FULL_CROP);
@@ -417,7 +427,7 @@ function PhotoPage({
           file: new File([blob], 'cropped-outfit.jpg', { type: 'image/jpeg' }),
         };
       }
-      const next = await createOutfit(uploadPhoto);
+      const next = await createOutfit(uploadPhoto, authToken);
       setResult(next);
       setPieceCategories(
         Object.fromEntries(
@@ -1627,9 +1637,13 @@ function ThemeSelector({
 function SettingsPage({
   library,
   setLibrary,
+  session,
+  onLogout,
 }: {
   library: LibraryState;
   setLibrary: (next: LibraryState) => void;
+  session: AuthSession;
+  onLogout: () => void;
 }) {
   const [categoryEditor, setCategoryEditor] = useState<{
     kind: CategoryKind;
@@ -1644,9 +1658,21 @@ function SettingsPage({
   return (
     <>
       <ScrollView contentContainerStyle={[styles.page, styles.settingsPage]}>
-        <Text style={[styles.settingsSectionTitle, styles.settingsFirstSectionTitle]}>
-          Appearance
-        </Text>
+        <Text style={[styles.settingsSectionTitle, styles.settingsFirstSectionTitle]}>Account</Text>
+        <View style={styles.settingsCategoryGroup}>
+          <View style={styles.accountRow}>
+            <View style={styles.accountCopy}>
+              <Text style={styles.settingsRowTitle}>{session.user.username}</Text>
+              <Text style={styles.accountStatus}>
+                {session.user.approved ? 'Approved for image uploads' : 'Awaiting upload approval'}
+              </Text>
+            </View>
+            <Pressable accessibilityRole="button" onPress={onLogout} style={styles.logoutButton}>
+              <Text style={styles.logoutText}>Log out</Text>
+            </Pressable>
+          </View>
+        </View>
+        <Text style={styles.settingsSectionTitle}>Appearance</Text>
         <ThemeSelector
           value={library.settings.theme}
           onChange={(theme) => setLibrary({ ...library, settings: { ...library.settings, theme } })}
@@ -1715,22 +1741,155 @@ function SettingsPage({
   );
 }
 
+function AuthPage({ onAuthenticated }: { onAuthenticated: (session: AuthSession) => void }) {
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+
+  async function submit() {
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      if (mode === 'register') {
+        setNotice(await register(username, password));
+        setMode('login');
+      } else {
+        const session = await login(username, password);
+        await saveSession(session);
+        onAuthenticated(session);
+      }
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Authentication failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <SafeAreaView style={styles.authPage}>
+      <StatusBar style="dark" />
+      <View style={styles.authBackdropBrand}>
+        <Image
+          source={require('./assets/fashion-canvas-mark.png')}
+          style={styles.authBackdropLogo}
+        />
+        <Text style={styles.authBackdropTitle}>Fashion Canvas</Text>
+      </View>
+      <Modal visible transparent animationType="slide" onRequestClose={() => undefined}>
+        <View style={styles.sheetBackdrop}>
+          <View style={styles.sheet}>
+            <View style={styles.sheetHeader}>
+              <View style={styles.sheetHeaderSpacer} />
+              <Text style={styles.sheetTitle}>{mode === 'login' ? 'Log in' : 'Register'}</Text>
+              <View style={styles.sheetHeaderSpacer} />
+            </View>
+            <ScrollView
+              contentContainerStyle={styles.authContent}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Image source={require('./assets/fashion-canvas-mark.png')} style={styles.authLogo} />
+              <Text accessibilityRole="header" style={styles.authTitle}>
+                {mode === 'login' ? 'Welcome back' : 'Create your account'}
+              </Text>
+              <Text style={styles.authIntro}>
+                {mode === 'login'
+                  ? 'Log in to Fashion Canvas before creating outfits from your photos.'
+                  : 'Register to keep image uploads protected by your account.'}
+              </Text>
+              <View style={styles.authForm}>
+                <Text style={styles.authLabel}>Username</Text>
+                <TextInput
+                  accessibilityLabel="Username"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!busy}
+                  onChangeText={setUsername}
+                  returnKeyType="next"
+                  style={styles.authInput}
+                  value={username}
+                />
+                <Text style={styles.authLabel}>Password</Text>
+                <TextInput
+                  accessibilityLabel="Password"
+                  editable={!busy}
+                  onChangeText={setPassword}
+                  onSubmitEditing={submit}
+                  returnKeyType="done"
+                  secureTextEntry
+                  style={styles.authInput}
+                  value={password}
+                />
+                {!!error && (
+                  <Text accessibilityRole="alert" style={styles.authError}>
+                    {error}
+                  </Text>
+                )}
+                {!!notice && (
+                  <Text accessibilityLiveRegion="polite" style={styles.authNotice}>
+                    {notice}
+                  </Text>
+                )}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: busy }}
+                  disabled={busy}
+                  onPress={submit}
+                  style={[styles.authSubmit, busy && styles.authDisabled]}
+                >
+                  {busy ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.primaryButtonText}>
+                      {mode === 'login' ? 'Log in' : 'Register'}
+                    </Text>
+                  )}
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={busy}
+                  onPress={() => {
+                    setMode(mode === 'login' ? 'register' : 'login');
+                    setError('');
+                    setNotice('');
+                  }}
+                  style={styles.authSwitch}
+                >
+                  <Text style={styles.authSwitchText}>
+                    {mode === 'login' ? 'New here? Register' : 'Already registered? Log in'}
+                  </Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
+}
+
 function AppContent() {
   const [tab, setTab] = useState<Tab>('photo');
   const [library, setLibrary] = useState(initialLibrary());
   const [hydrated, setHydrated] = useState(false);
+  const [session, setSession] = useState<AuthSession | null>(null);
   const systemScheme = useColorScheme();
   const resolvedTheme =
     library.settings.theme === 'system' ? (systemScheme ?? 'light') : library.settings.theme;
   colors = resolvedTheme === 'dark' ? darkColors : lightColors;
   styles = withAlignedCardText(createStyles(colors));
   useEffect(() => {
-    loadLibrary().then(async (stored) => {
+    Promise.all([loadLibrary(), loadSession()]).then(async ([stored, storedSession]) => {
       try {
         setLibrary(await migrateLibraryImages(stored));
       } catch {
         setLibrary(stored);
       } finally {
+        setSession(storedSession);
         setHydrated(true);
       }
     });
@@ -1741,15 +1900,29 @@ function AppContent() {
   const page = useMemo(
     () =>
       tab === 'photo' ? (
-        <PhotoPage library={library} setLibrary={setLibrary} onSaved={() => setTab('outfits')} />
+        <PhotoPage
+          library={library}
+          setLibrary={setLibrary}
+          onSaved={() => setTab('outfits')}
+          authToken={session?.token ?? ''}
+        />
       ) : tab === 'outfits' ? (
         <OutfitsPage library={library} setLibrary={setLibrary} />
       ) : tab === 'pieces' ? (
         <PiecesPage library={library} setLibrary={setLibrary} />
       ) : (
-        <SettingsPage library={library} setLibrary={setLibrary} />
+        <SettingsPage
+          library={library}
+          setLibrary={setLibrary}
+          session={session!}
+          onLogout={() => {
+            void clearSession();
+            setSession(null);
+            setTab('photo');
+          }}
+        />
       ),
-    [tab, library, resolvedTheme],
+    [tab, library, resolvedTheme, session],
   );
   if (!hydrated)
     return (
@@ -1757,6 +1930,7 @@ function AppContent() {
         <ActivityIndicator color="#B84F32" />
       </SafeAreaView>
     );
+  if (!session) return <AuthPage onAuthenticated={setSession} />;
   return (
     <SafeAreaView edges={['top']} style={styles.app}>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
@@ -2412,6 +2586,58 @@ function createStyles(themeColors: typeof lightColors) {
   colors = themeColors;
   return StyleSheet.create({
     app: { flex: 1, backgroundColor: colors.paper },
+    authPage: { flex: 1, backgroundColor: '#111' },
+    authBackdropBrand: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      paddingTop: 70,
+    },
+    authBackdropLogo: { width: 70, height: 70, borderRadius: 17, marginBottom: 14 },
+    authBackdropTitle: { fontFamily: 'serif', fontSize: 24, color: '#F3EFE6' },
+    authContent: {
+      flexGrow: 1,
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      paddingHorizontal: 24,
+      paddingTop: 34,
+      paddingBottom: 48,
+    },
+    authLogo: { width: 82, height: 82, borderRadius: 20, marginBottom: 24 },
+    authTitle: { fontFamily: 'serif', fontSize: 36, color: colors.ink, textAlign: 'center' },
+    authIntro: {
+      maxWidth: 420,
+      marginTop: 10,
+      color: colors.muted,
+      fontSize: 15,
+      lineHeight: 22,
+      textAlign: 'center',
+    },
+    authForm: { width: '100%', maxWidth: 420, marginTop: 32 },
+    authLabel: { color: colors.ink, fontSize: 13, fontWeight: '700', marginBottom: 7 },
+    authInput: {
+      minHeight: 52,
+      borderWidth: 1,
+      borderColor: colors.line,
+      borderRadius: 12,
+      backgroundColor: colors.input,
+      color: colors.ink,
+      fontSize: 16,
+      paddingHorizontal: 15,
+      marginBottom: 18,
+    },
+    authError: { color: colors.rust, fontSize: 13, lineHeight: 19, marginBottom: 14 },
+    authNotice: { color: colors.sage, fontSize: 13, lineHeight: 19, marginBottom: 14 },
+    authSubmit: {
+      minHeight: 52,
+      borderRadius: 12,
+      backgroundColor: colors.rust,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    authDisabled: { opacity: 0.6 },
+    authSwitch: { minHeight: 48, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
+    authSwitchText: { color: colors.rust, fontSize: 14, fontWeight: '700' },
     cameraWorkspace: { flex: 1, backgroundColor: '#111' },
     cameraLanding: { flex: 1, backgroundColor: '#111' },
     cameraEmptyStage: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
@@ -2592,6 +2818,11 @@ function createStyles(themeColors: typeof lightColors) {
     },
     brandMark: { width: 34, height: 34, borderRadius: 8 },
     brand: { fontFamily: 'serif', fontSize: 19, color: colors.ink },
+    accountRow: { flexDirection: 'row', alignItems: 'center', padding: 15, gap: 12 },
+    accountCopy: { flex: 1 },
+    accountStatus: { color: colors.muted, fontSize: 12, marginTop: 4 },
+    logoutButton: { borderWidth: 1, borderColor: colors.line, borderRadius: 9, padding: 10 },
+    logoutText: { color: colors.rust, fontSize: 13, fontWeight: '700' },
     page: { padding: 20, paddingBottom: 50, maxWidth: 900, width: '100%', alignSelf: 'center' },
     libraryPage: { paddingTop: 4, paddingHorizontal: 16 },
     libraryFullscreen: {

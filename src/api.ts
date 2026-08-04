@@ -8,12 +8,15 @@ const API_URL = (process.env.EXPO_PUBLIC_FASHION_CANVAS_API_URL ?? 'http://local
   '',
 );
 
-export async function createOutfit(photo: {
-  uri: string;
-  fileName?: string | null;
-  mimeType?: string | null;
-  file?: File;
-}): Promise<OutfitApiResult> {
+export async function createOutfit(
+  photo: {
+    uri: string;
+    fileName?: string | null;
+    mimeType?: string | null;
+    file?: File;
+  },
+  token: string,
+): Promise<OutfitApiResult> {
   const body = new FormData();
   if (photo.file) body.append('photo', photo.file, photo.fileName ?? 'mirror-selfie.jpg');
   else {
@@ -28,7 +31,11 @@ export async function createOutfit(photo: {
   }
   let response: Awaited<ReturnType<typeof fetch>>;
   try {
-    response = await fetch(`${API_URL}/api/outfits`, { method: 'POST', body });
+    response = await fetch(`${API_URL}/api/outfits`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body,
+    });
   } catch {
     throw new Error(
       'The Fashion Canvas server is unavailable. Check your connection and try again.',
