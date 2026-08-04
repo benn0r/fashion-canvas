@@ -1658,14 +1658,11 @@ function SettingsPage({
   return (
     <>
       <ScrollView contentContainerStyle={[styles.page, styles.settingsPage]}>
-        <Text style={[styles.settingsSectionTitle, styles.settingsFirstSectionTitle]}>Account</Text>
+        <Text style={styles.settingsSectionTitle}>Account</Text>
         <View style={styles.settingsCategoryGroup}>
           <View style={styles.accountRow}>
             <View style={styles.accountCopy}>
-              <Text style={styles.settingsRowTitle}>{session.user.username}</Text>
-              <Text style={styles.accountStatus}>
-                {session.user.approved ? 'Approved for image uploads' : 'Awaiting upload approval'}
-              </Text>
+              <Text style={styles.settingsCategoryName}>{session.user.username}</Text>
             </View>
             <Pressable accessibilityRole="button" onPress={onLogout} style={styles.logoutButton}>
               <Text style={styles.logoutText}>Log out</Text>
@@ -2820,7 +2817,6 @@ function createStyles(themeColors: typeof lightColors) {
     brand: { fontFamily: 'serif', fontSize: 19, color: colors.ink },
     accountRow: { flexDirection: 'row', alignItems: 'center', padding: 15, gap: 12 },
     accountCopy: { flex: 1 },
-    accountStatus: { color: colors.muted, fontSize: 12, marginTop: 4 },
     logoutButton: { borderWidth: 1, borderColor: colors.line, borderRadius: 9, padding: 10 },
     logoutText: { color: colors.rust, fontSize: 13, fontWeight: '700' },
     page: { padding: 20, paddingBottom: 50, maxWidth: 900, width: '100%', alignSelf: 'center' },
