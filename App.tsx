@@ -1121,6 +1121,7 @@ function OutfitsPage({
       <OutfitModal
         columns={library.settings.pieceGridColumns}
         outfit={selected}
+        categories={library.outfitCategories}
         pieces={
           selected
             ? library.pieces.filter((piece) => pieceOutfitIds(piece).includes(selected.id))
@@ -1131,6 +1132,15 @@ function OutfitsPage({
           setSelectedPiece(piece);
         }}
         onClose={() => setSelected(null)}
+        onEditOutfit={(changes) => {
+          if (!selected) return;
+          const next = { ...selected, ...changes };
+          setLibrary({
+            ...library,
+            outfits: library.outfits.map((outfit) => (outfit.id === selected.id ? next : outfit)),
+          });
+          setSelected(next);
+        }}
         onDelete={() => {
           if (!selected) return;
           setLibrary(removeOutfitFromLibrary(library, selected));
@@ -1541,6 +1551,7 @@ function PiecesPage({
       <OutfitModal
         columns={library.settings.pieceGridColumns}
         outfit={selectedOutfit}
+        categories={library.outfitCategories}
         pieces={
           selectedOutfit
             ? library.pieces.filter((piece) => pieceOutfitIds(piece).includes(selectedOutfit.id))
@@ -1551,6 +1562,17 @@ function PiecesPage({
           setSelected(piece);
         }}
         onClose={() => setSelectedOutfit(null)}
+        onEditOutfit={(changes) => {
+          if (!selectedOutfit) return;
+          const next = { ...selectedOutfit, ...changes };
+          setLibrary({
+            ...library,
+            outfits: library.outfits.map((outfit) =>
+              outfit.id === selectedOutfit.id ? next : outfit,
+            ),
+          });
+          setSelectedOutfit(next);
+        }}
         onDelete={() => {
           if (!selectedOutfit) return;
           setLibrary(removeOutfitFromLibrary(library, selectedOutfit));
@@ -1979,21 +2001,25 @@ export default function App() {
 function OutfitModal({
   outfit,
   pieces,
+  categories,
   columns,
   onOpenPiece,
+  onEditOutfit,
   onClose,
   onDelete,
 }: {
   outfit: SavedOutfit | null;
   pieces: LibraryState['pieces'];
+  categories: Category[];
   columns: GridColumns;
   onOpenPiece: (piece: SavedPiece) => void;
+  onEditOutfit: (changes: OutfitChanges) => void;
   onClose: () => void;
   onDelete: () => void;
 }) {
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [action, setAction] = useState<'edit' | 'delete' | null>(null);
   useEffect(() => {
-    if (!outfit) setConfirmDelete(false);
+    if (!outfit) setAction(null);
   }, [outfit]);
   const rows = Array.from({ length: Math.ceil(pieces.length / columns) }, (_, index) =>
     pieces.slice(index * columns, index * columns + columns),
@@ -2001,7 +2027,7 @@ function OutfitModal({
   return (
     <>
       <Modal
-        visible={!!outfit && !confirmDelete}
+        visible={!!outfit && action === null}
         animationType={Platform.OS === 'web' ? 'none' : 'slide'}
         presentationStyle={Platform.OS === 'web' ? undefined : 'overFullScreen'}
         transparent
@@ -2027,8 +2053,28 @@ function OutfitModal({
               <ScrollView contentContainerStyle={styles.outfitDetailContent}>
                 <StoredImage uri={outfit.image} style={styles.outfitDetailImage} />
                 <View style={styles.outfitDescriptionCard}>
-                  <Text style={styles.detailEyebrow}>AI DESCRIPTION</Text>
+                  <Text style={styles.detailEyebrow}>DESCRIPTION</Text>
                   <Text style={styles.outfitDescription}>{outfit.description}</Text>
+                </View>
+                <View style={styles.pieceActions}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Edit outfit"
+                    onPress={() => setAction('edit')}
+                    style={styles.pieceAction}
+                  >
+                    <Ionicons name="create-outline" size={20} color={colors.ink} />
+                    <Text style={styles.pieceActionText}>Edit</Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Delete outfit"
+                    onPress={() => setAction('delete')}
+                    style={styles.pieceAction}
+                  >
+                    <Ionicons name="trash-outline" size={20} color={colors.rust} />
+                    <Text style={styles.pieceDeleteActionText}>Delete</Text>
+                  </Pressable>
                 </View>
                 <View style={styles.detailSectionHeader}>
                   <Text style={styles.detailSectionTitle}>Pieces</Text>
@@ -2068,27 +2114,28 @@ function OutfitModal({
                     </View>
                   ))}
                 </View>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Delete outfit"
-                  style={styles.dangerButton}
-                  onPress={() => setConfirmDelete(true)}
-                >
-                  <Text style={styles.dangerText}>Delete outfit</Text>
-                </Pressable>
               </ScrollView>
             </View>
           </View>
         )}
       </Modal>
+      <OutfitEditModal
+        outfit={action === 'edit' ? outfit : null}
+        categories={categories}
+        onCancel={() => setAction(null)}
+        onSave={(changes) => {
+          onEditOutfit(changes);
+          setAction(null);
+        }}
+      />
       <ConfirmModal
-        visible={confirmDelete}
+        visible={action === 'delete'}
         title="Delete outfit?"
         message="This outfit will be permanently removed. Pieces used only by this outfit will also be deleted."
         confirmLabel="Delete outfit"
-        onCancel={() => setConfirmDelete(false)}
+        onCancel={() => setAction(null)}
         onConfirm={() => {
-          setConfirmDelete(false);
+          setAction(null);
           onDelete();
         }}
       />
@@ -2096,7 +2143,99 @@ function OutfitModal({
   );
 }
 
+type OutfitChanges = Pick<SavedOutfit, 'description' | 'categoryId'>;
 type PieceChanges = Pick<SavedPiece, 'label' | 'description' | 'categoryId'>;
+
+function OutfitEditModal({
+  outfit,
+  categories,
+  onCancel,
+  onSave,
+}: {
+  outfit: SavedOutfit | null;
+  categories: Category[];
+  onCancel: () => void;
+  onSave: (changes: OutfitChanges) => void;
+}) {
+  const [description, setDescription] = useState('');
+  const [categoryId, setCategoryId] = useState(UNCATEGORIZED_OUTFIT);
+  useEffect(() => {
+    if (outfit) {
+      setDescription(outfit.description);
+      setCategoryId(outfit.categoryId);
+    }
+  }, [outfit]);
+  return (
+    <Modal
+      visible={!!outfit}
+      transparent
+      animationType={Platform.OS === 'web' ? 'none' : 'slide'}
+      onRequestClose={onCancel}
+    >
+      <View style={styles.sheetBackdrop}>
+        <View style={styles.sheet}>
+          <View style={styles.sheetHeader}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Cancel edit"
+              onPress={onCancel}
+              style={styles.sheetHeaderButton}
+            >
+              <Text style={styles.sheetHeaderAction}>Cancel</Text>
+            </Pressable>
+            <Text accessibilityRole="header" style={styles.sheetTitle}>
+              Edit outfit
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Save outfit"
+              disabled={!description.trim()}
+              onPress={() => onSave({ description: description.trim(), categoryId })}
+              style={[styles.sheetHeaderButton, styles.sheetHeaderButtonRight]}
+            >
+              <Text style={[styles.sheetHeaderAction, styles.sheetDone]}>Save</Text>
+            </Pressable>
+          </View>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.sheetContent}
+          >
+            <Text style={styles.sheetSectionLabel}>DESCRIPTION</Text>
+            <View style={styles.sheetGroup}>
+              <TextInput
+                accessibilityLabel="Outfit description"
+                multiline
+                value={description}
+                onChangeText={setDescription}
+                style={[styles.sheetInput, styles.descriptionInput]}
+              />
+            </View>
+            <Text style={styles.sheetSectionLabel}>CATEGORY</Text>
+            <View style={styles.editCategoryList}>
+              {categories.map((category) => (
+                <Pressable
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: categoryId === category.id }}
+                  accessibilityLabel={`Use category ${category.name}`}
+                  key={category.id}
+                  onPress={() => setCategoryId(category.id)}
+                  style={styles.choiceRow}
+                >
+                  <Ionicons
+                    name={categoryId === category.id ? 'radio-button-on' : 'radio-button-off'}
+                    size={22}
+                    color={categoryId === category.id ? colors.rust : colors.muted}
+                  />
+                  <Text style={styles.choiceText}>{category.name}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
 
 function ConfirmModal({
   visible,

@@ -125,8 +125,15 @@ test('category headers preview their saved images', async ({ page }) => {
   await page.getByRole('button', { name: 'Expand Casual' }).click();
   await page.getByRole('button', { name: 'Open outfit Rust linen summer outfit' }).click();
   await expect(page.getByRole('heading', { name: 'Outfit details' })).toBeVisible();
+  await page.getByRole('button', { name: 'Edit outfit' }).click();
+  const outfitDescription = page.getByLabel('Outfit description');
+  await expect(outfitDescription).toHaveValue('Rust linen summer outfit');
+  await outfitDescription.fill('Tailored rust linen outfit');
+  await page.getByRole('radio', { name: 'Use category Work' }).click();
+  await page.getByRole('button', { name: 'Save outfit' }).click();
+  await expect(page.getByRole('heading', { name: 'Outfit details' })).toBeVisible();
+  await expect(page.getByRole('dialog').getByText('Tailored rust linen outfit')).toBeVisible();
   await expect(page.getByLabel('Pieces grid, 3 columns')).toBeVisible();
-  await expect(page.getByRole('dialog').getByText('Rust linen summer outfit')).toBeVisible();
   await page.getByRole('button', { name: 'Open piece Linen shirt' }).click();
   await expect(page.getByRole('heading', { name: 'Piece details' })).toBeVisible();
   await expect(page.getByText('DESCRIPTION', { exact: true })).toBeVisible();
