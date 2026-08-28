@@ -158,7 +158,7 @@ test('category headers preview their saved images', async ({ page }) => {
   await expect(page.getByText('A cream silk blouse')).toBeVisible();
   await page
     .getByRole('dialog')
-    .getByRole('button', { name: 'Open outfit Rust linen summer outfit' })
+    .getByRole('button', { name: 'Open outfit Tailored rust linen outfit' })
     .click();
   await expect(page.getByRole('heading', { name: 'Outfit details' })).toBeVisible();
   await page.getByRole('button', { name: 'Close outfit' }).click();
@@ -171,7 +171,7 @@ test('category headers preview their saved images', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Piece details' })).toBeVisible();
   await expect(page.getByRole('dialog').getByText('Outfits')).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'Open outfit Rust linen summer outfit' }),
+    page.getByRole('button', { name: 'Open outfit Tailored rust linen outfit' }),
   ).toBeVisible();
 });
 
