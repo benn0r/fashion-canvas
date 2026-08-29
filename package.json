@@ -24,7 +24,7 @@
     "lint:fix": "expo lint . --fix",
     "build": "expo export --platform web --output-dir dist",
     "test": "tsc --project tests/unit/tsconfig.json && node --experimental-test-coverage --test-coverage-exclude='.unit-test-dist/tests/**' --test-coverage-lines=98 --test-coverage-branches=97 --test-coverage-functions=100 --test .unit-test-dist/tests/unit/index.test.js",
-    "test:e2e": "playwright test",
+    "test:e2e": "npm run build && playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
