@@ -30,6 +30,12 @@ jobs:
         with: { node-version: 24 }
       - run: npm ci
       - run: npm run build
+      - name: Upload web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: fashion-canvas-web-${{ gitea.run_number }}
+          path: dist
+          retention-days: 1
 
   test:
     needs: build
@@ -49,7 +55,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: npm ci
-      - run: npm run test:e2e
+      - name: Download web build
+        uses: actions/download-artifact@v4
+        with:
+          name: fashion-canvas-web-${{ gitea.run_number }}
+          path: dist
+      - run: npm run test:e2e:ci
 
   build-android-apk:
     needs: [test, test-e2e]
