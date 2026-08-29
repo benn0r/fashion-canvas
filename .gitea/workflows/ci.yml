@@ -16,6 +16,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 24 }
+      - name: Create artifact service probe
+        run: printf 'Fashion Canvas artifact upload probe\n' > artifact-probe.txt
+      - name: Upload artifact service probe
+        uses: ChristopherHX/gitea-upload-artifact@v4
+        with:
+          name: fashion-canvas-artifact-probe-${{ gitea.run_number }}
+          path: artifact-probe.txt
+          retention-days: 1
       - run: npm ci
       - run: npm run format:check
       - run: npm run lint
